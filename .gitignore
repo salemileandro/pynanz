@@ -1,0 +1,7 @@
+*__pycache__*
+test/*
+tutorials/*
+doc/*
+.idea/*
+nohup*
+build.sh

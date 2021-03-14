@@ -1,0 +1,636 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8" />
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  
+  <title>pynanz.StockData &mdash; Pynanz  documentation</title>
+  
+
+  
+  <link rel="stylesheet" href="../../_static/css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
+  <link rel="stylesheet" href="../../_static/graphviz.css" type="text/css" />
+
+  
+  
+
+  
+  
+
+  
+
+  
+  <!--[if lt IE 9]>
+    <script src="../../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+    
+      <script type="text/javascript" id="documentation_options" data-url_root="../../" src="../../_static/documentation_options.js"></script>
+        <script src="../../_static/jquery.js"></script>
+        <script src="../../_static/underscore.js"></script>
+        <script src="../../_static/doctools.js"></script>
+        <script async="async" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.7/latest.js?config=TeX-AMS-MML_HTMLorMML"></script>
+    
+    <script type="text/javascript" src="../../_static/js/theme.js"></script>
+
+    
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav">
+
+   
+  <div class="wy-grid-for-nav">
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+          
+
+          
+            <a href="../../index.html" class="icon icon-home"> Pynanz
+          
+
+          
+          </a>
+
+          
+            
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+              
+            
+            
+              <ul>
+<li class="toctree-l1"><a class="reference internal" href="../../sources.html">Documentation</a></li>
+</ul>
+
+            
+          
+        </div>
+        
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../index.html">Pynanz</a>
+        
+      </nav>
+
+
+      <div class="wy-nav-content">
+        
+        <div class="rst-content">
+        
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="../../index.html" class="icon icon-home"></a> &raquo;</li>
+        
+          <li><a href="../index.html">Module code</a> &raquo;</li>
+        
+      <li>pynanz.StockData</li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+      </li>
+    
+  </ul>
+
+  
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <h1>Source code for pynanz.StockData</h1><div class="highlight"><pre>
+<span></span><span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+<span class="kn">import</span> <span class="nn">datetime</span>
+<span class="kn">import</span> <span class="nn">pandas</span> <span class="k">as</span> <span class="nn">pd</span>
+<span class="kn">from</span> <span class="nn">yahooquery</span> <span class="kn">import</span> <span class="n">Ticker</span>
+<span class="kn">from</span> <span class="nn">typing</span> <span class="kn">import</span> <span class="n">Union</span>
+<span class="kn">from</span> <span class="nn">.</span> <span class="kn">import</span> <span class="n">indicators</span>
+
+
+<div class="viewcode-block" id="StockData"><a class="viewcode-back" href="../../sources.html#pynanz.StockData">[docs]</a><span class="k">class</span> <span class="nc">StockData</span><span class="p">:</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    StockData is a class to store *Open, High, Low, Close, Volume* (OHLCV) data of financial assets (e.g. stocks, ETFs).</span>
+<span class="sd">    The member function :func:`pynanz.StockData.download` can be called to download data from yahoofinance (uses</span>
+<span class="sd">    `yahooquery &lt;https://yahooquery.dpguthrie.com&gt;`_ as backend).</span>
+
+<span class="sd">    The main attribute of a `StockData` object is `self.data`, which is a pandas.DataFrame object. The index of the</span>
+<span class="sd">    DataFrame is a list of `datetime.date` object which correspond to **trading** days. The columns are muti-indexed:</span>
+<span class="sd">    they are tuple of size=2 whose first entry is the `ticker symbol` (e.g. &quot;AAPL&quot;, &quot;GOOG&quot;) and second the attribute</span>
+<span class="sd">    (e.g. &quot;open&quot;, &quot;high&quot;).</span>
+
+<span class="sd">    Financial indicators such as exponentially moving averages (EMA) or moving average convergence divergence (MACD)</span>
+<span class="sd">    can also be computed. Such indicators can be used to build investment strategies (see Strategy class).</span>
+
+<span class="sd">    **Note that:**</span>
+
+<span class="sd">    * Only daily data can be retrieved.</span>
+<span class="sd">    * Ticker symbols are fully capitalized, e.g. &quot;AAPL&quot; (not &quot;aapl&quot;).</span>
+<span class="sd">    * Attribute are lower case, e.g &quot;close&quot; (not &quot;Close&quot;/&quot;CLOSE&quot;).</span>
+
+
+<span class="sd">    **List of attributes:**</span>
+
+<span class="sd">    :cvar pd.DataFrame self.data: DataFrame containing the data.</span>
+<span class="sd">    :cvar list self.tickers: List of ticker symbols considered in the self.data pd.DataFrame,</span>
+<span class="sd">        e.g. [&quot;AAPL&quot;, &quot;GOOG&quot;, &quot;USFD&quot;, &quot;ARKF&quot;]. Symbols are fully capitalized.</span>
+<span class="sd">    :cvar list self.attributes: List of attributes available, e.g. [&quot;close&quot;, &quot;open&quot;, ...].</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+<div class="viewcode-block" id="StockData.__init__"><a class="viewcode-back" href="../../sources.html#pynanz.StockData.__init__">[docs]</a>    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Constructor for the StockData class. The object needs to be initialized using either</span>
+
+<span class="sd">        * :func:`pynanz.StockData.download`</span>
+<span class="sd">        * :func:`pynanz.StockData.load` (if a call to :func:`pynanz.StockData.save` was done before).</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="c1"># pd.DataFrame containing the data.</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">data</span> <span class="o">=</span> <span class="kc">None</span>
+
+        <span class="c1"># List of tickers, e.g. [&quot;AAPL&quot;, &quot;GOOG&quot;, &quot;USFD&quot;, &quot;ARKF&quot;]. Access via property</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">tickers</span> <span class="o">=</span> <span class="kc">None</span></div>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">tickers</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_tickers</span>
+
+    <span class="nd">@tickers</span><span class="o">.</span><span class="n">setter</span>
+    <span class="k">def</span> <span class="nf">tickers</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">tickers</span><span class="p">):</span>
+        <span class="c1"># Default None initialization</span>
+        <span class="k">if</span> <span class="n">tickers</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_tickers</span> <span class="o">=</span> <span class="kc">None</span>
+            <span class="k">return</span>
+
+        <span class="c1"># Safe instantiation</span>
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">tickers</span><span class="p">,</span> <span class="nb">str</span><span class="p">):</span>
+            <span class="n">x</span> <span class="o">=</span> <span class="p">[</span><span class="n">tickers</span><span class="p">]</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="p">(</span><span class="nb">isinstance</span><span class="p">(</span><span class="n">tickers</span><span class="p">,</span> <span class="nb">list</span><span class="p">)</span> <span class="ow">or</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">tickers</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">)):</span>
+            <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="s2">&quot;tickers must be of type str of list[str], not&quot;</span><span class="p">,</span> <span class="nb">type</span><span class="p">(</span><span class="n">tickers</span><span class="p">))</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">tickers</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="nb">str</span><span class="p">):</span>
+                <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="s2">&quot;tickers must be of type str of list[str], not&quot;</span><span class="p">,</span> <span class="nb">type</span><span class="p">(</span><span class="n">tickers</span><span class="p">))</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">_tickers</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">tickers</span><span class="p">)</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">attributes</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">data</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">return</span> <span class="kc">None</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">unique</span><span class="p">([</span><span class="n">y</span> <span class="k">for</span> <span class="n">x</span><span class="p">,</span> <span class="n">y</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">data</span><span class="o">.</span><span class="n">columns</span><span class="p">])</span>
+
+    <span class="nd">@attributes</span><span class="o">.</span><span class="n">setter</span>
+    <span class="k">def</span> <span class="nf">attributes</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">attributes</span><span class="p">):</span>
+        <span class="k">raise</span> <span class="ne">PermissionError</span><span class="p">(</span><span class="s2">&quot;self.attributes is read-only.&quot;</span><span class="p">)</span>
+
+<div class="viewcode-block" id="StockData.download"><a class="viewcode-back" href="../../sources.html#pynanz.StockData.download">[docs]</a>    <span class="k">def</span> <span class="nf">download</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span>
+                 <span class="n">tickers</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="nb">list</span><span class="p">,</span> <span class="nb">str</span><span class="p">],</span>
+                 <span class="n">start_date</span><span class="p">:</span> <span class="n">datetime</span><span class="o">.</span><span class="n">date</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+                 <span class="n">end_date</span><span class="p">:</span> <span class="n">datetime</span><span class="o">.</span><span class="n">date</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+                 <span class="n">tolerance</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">15</span><span class="p">,</span>
+                 <span class="n">clean_nan_index</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Download data from yahoo finance using `yahooquery &lt;https://yahooquery.dpguthrie.com&gt;`_ as backend.</span>
+
+<span class="sd">        :param list[str],str tickers: List of str or str that contains the ticker symbols of the considered assets, e.g.</span>
+<span class="sd">            [&quot;AAPL&quot;, &quot;GOOG&quot;, &quot;USFD&quot;, &quot;ARKF&quot;]. No default.</span>
+<span class="sd">        :param datetime.date start_date: Starting date to consider the data. If unspecified, the API will try to fetch</span>
+<span class="sd">            starting from the oldest available date. Default = None.</span>
+<span class="sd">        :param datetime.date end_date: End date (inclusive) for the date to be considered. If unspecified, it is set</span>
+<span class="sd">            to today (`datetime.date.today()`). Default = None.</span>
+<span class="sd">        :param int tolerance: If `start_date` is specified, and `tolerance &gt;= 0`, then any asset whose oldest available</span>
+<span class="sd">            data is newer than than `start_date` up to `tolerance` days is discarded. This option is useful when one</span>
+<span class="sd">            needs to consider data that exist for long-time enough in their model. Setting `tolerance` a negative value</span>
+<span class="sd">            deactivate this feature. Default = 15.</span>
+<span class="sd">        :param bool clean_nan_index: If true, indices (rows) of self.data which contains NaN values are cleaned. This</span>
+<span class="sd">            can be useful since American and European trading days are not always the same, because of varying holidays.</span>
+<span class="sd">            Default is True (recommended).</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="c1"># Set the tickers list</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">tickers</span> <span class="o">=</span> <span class="n">tickers</span>
+
+        <span class="c1"># Reset the pd.DataFrame to None</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">data</span> <span class="o">=</span> <span class="kc">None</span>
+
+        <span class="n">too_new</span> <span class="o">=</span> <span class="p">[]</span>  <span class="c1"># Hold the ticker symbols of assets which are too recent (if applicable)</span>
+        <span class="n">not_found</span> <span class="o">=</span> <span class="p">[]</span>  <span class="c1"># Hold the ticker symbols of assets which are not found (if applicable)</span>
+        <span class="k">for</span> <span class="n">ticker</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">tickers</span><span class="p">:</span>
+            <span class="n">t</span> <span class="o">=</span> <span class="n">Ticker</span><span class="p">(</span><span class="n">ticker</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">start_date</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+                <span class="k">if</span> <span class="n">end_date</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+                    <span class="n">end_date</span> <span class="o">=</span> <span class="n">datetime</span><span class="o">.</span><span class="n">date</span><span class="o">.</span><span class="n">today</span><span class="p">()</span>
+                <span class="n">df</span> <span class="o">=</span> <span class="n">t</span><span class="o">.</span><span class="n">history</span><span class="p">(</span><span class="n">start</span><span class="o">=</span><span class="n">start_date</span><span class="p">,</span> <span class="n">end</span><span class="o">=</span><span class="n">end_date</span><span class="p">,</span> <span class="n">interval</span><span class="o">=</span><span class="s2">&quot;1d&quot;</span><span class="p">)</span>
+                <span class="n">day_diff</span> <span class="o">=</span> <span class="n">df</span><span class="o">.</span><span class="n">index</span><span class="o">.</span><span class="n">values</span><span class="p">[</span><span class="mi">0</span><span class="p">][</span><span class="mi">1</span><span class="p">]</span> <span class="o">-</span> <span class="n">start_date</span>
+                <span class="k">if</span> <span class="n">day_diff</span><span class="o">.</span><span class="n">days</span> <span class="o">&gt;</span> <span class="n">tolerance</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
+                    <span class="n">too_new</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">ticker</span><span class="p">)</span>
+                    <span class="k">continue</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">df</span> <span class="o">=</span> <span class="n">ticker</span><span class="o">.</span><span class="n">history</span><span class="p">(</span><span class="n">period</span><span class="o">=</span><span class="s2">&quot;max&quot;</span><span class="p">,</span> <span class="n">interval</span><span class="o">=</span><span class="s2">&quot;1d&quot;</span><span class="p">)</span>
+            <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">df</span><span class="p">,</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">):</span>
+                <span class="n">not_found</span><span class="o">.</span><span class="n">append</span><span class="p">([</span><span class="n">ticker</span><span class="p">,</span> <span class="n">df</span><span class="p">])</span>
+                <span class="k">continue</span>
+            <span class="n">index</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">MultiIndex</span><span class="o">.</span><span class="n">from_product</span><span class="p">([[</span><span class="n">ticker</span><span class="p">],</span> <span class="n">df</span><span class="o">.</span><span class="n">columns</span><span class="o">.</span><span class="n">values</span><span class="p">])</span>
+            <span class="n">df</span><span class="o">.</span><span class="n">columns</span> <span class="o">=</span> <span class="n">index</span>
+            <span class="n">df</span><span class="o">.</span><span class="n">reset_index</span><span class="p">(</span><span class="n">level</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">drop</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">inplace</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">data</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">data</span> <span class="o">=</span> <span class="n">df</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">data</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">concat</span><span class="p">([</span><span class="bp">self</span><span class="o">.</span><span class="n">data</span><span class="p">,</span> <span class="n">df</span><span class="p">],</span> <span class="n">axis</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
+
+        <span class="c1"># Output some messages to the user.</span>
+        <span class="k">if</span> <span class="n">too_new</span><span class="p">:</span>
+            <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Some stocks were too new to be considered:&quot;</span><span class="p">,</span> <span class="n">end</span><span class="o">=</span><span class="s2">&quot; &quot;</span><span class="p">)</span>
+            <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="n">too_new</span><span class="p">:</span>
+                <span class="nb">print</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">end</span><span class="o">=</span><span class="s2">&quot;, &quot;</span><span class="p">)</span>
+            <span class="nb">print</span><span class="p">()</span>
+        <span class="k">if</span> <span class="n">not_found</span><span class="p">:</span>
+            <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Some stocks where not found:&quot;</span><span class="p">,</span> <span class="n">end</span><span class="o">=</span><span class="s2">&quot; &quot;</span><span class="p">)</span>
+            <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="n">not_found</span><span class="p">:</span>
+                <span class="nb">print</span><span class="p">(</span><span class="n">x</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">end</span><span class="o">=</span><span class="s2">&quot;, &quot;</span><span class="p">)</span>
+            <span class="nb">print</span><span class="p">()</span>
+
+        <span class="c1"># Clean-up the pd.DataFrame</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">data</span><span class="o">.</span><span class="n">sort_index</span><span class="p">(</span><span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">inplace</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">start_date</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">data</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">data</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">data</span><span class="o">.</span><span class="n">index</span> <span class="o">&gt;=</span> <span class="n">start_date</span><span class="p">]</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
+        <span class="k">if</span> <span class="n">clean_nan_index</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">data</span><span class="o">.</span><span class="n">dropna</span><span class="p">(</span><span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">inplace</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">tickers</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">unique</span><span class="p">([</span><span class="n">x</span> <span class="k">for</span> <span class="n">x</span><span class="p">,</span> <span class="n">y</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">data</span><span class="o">.</span><span class="n">columns</span><span class="p">])</span></div>
+
+<div class="viewcode-block" id="StockData.load"><a class="viewcode-back" href="../../sources.html#pynanz.StockData.load">[docs]</a>    <span class="k">def</span> <span class="nf">load</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">filename</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Load data from a pickle file. Need :func:`pynanz.StockData.save` to be called in a previous run.</span>
+
+<span class="sd">        :param str filename: Path to the pickle file, e.g. `&quot;./stock_data.pkl&quot;`. No default.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="c1"># Read the pickle form the pd.read_pickle() function</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">data</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">read_pickle</span><span class="p">(</span><span class="n">filename</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">tickers</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">unique</span><span class="p">([</span><span class="n">x</span> <span class="k">for</span> <span class="n">x</span><span class="p">,</span> <span class="n">y</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">data</span><span class="o">.</span><span class="n">columns</span><span class="p">])</span></div>
+
+<div class="viewcode-block" id="StockData.save"><a class="viewcode-back" href="../../sources.html#pynanz.StockData.save">[docs]</a>    <span class="k">def</span> <span class="nf">save</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">filename</span><span class="p">:</span> <span class="nb">str</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Save data to a pickle file (pd.DataFrame.to_pickle call). Retrieve data using :func:`pynanz.StockData.load`.</span>
+
+<span class="sd">        :param str filename: Path to the pickle file, e.g. `&quot;./stock_data.pkl&quot;`</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">pd</span><span class="o">.</span><span class="n">to_pickle</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">data</span><span class="p">,</span> <span class="n">filename</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="StockData.future_return"><a class="viewcode-back" href="../../sources.html#pynanz.StockData.future_return">[docs]</a>    <span class="k">def</span> <span class="nf">future_return</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span>
+                      <span class="n">horizon</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">1</span><span class="p">,</span>
+                      <span class="n">target</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;close&quot;</span><span class="p">,</span>
+                      <span class="n">force_compute</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        For a given target (default=\&quot;close\&quot;), computes the future return over every (\&quot;ticker_symbol\&quot;, \&quot;target\&quot;)</span>
+<span class="sd">        columns of the pd.DataFrame self.data. This function applies :func:`pynanz.indicators.future_return`.</span>
+
+<span class="sd">        :param int horizon: Time horizon, a positive integer. Default=1.</span>
+<span class="sd">        :param str target: Name of the targeted attribute (e.g. &quot;close&quot;, &quot;open&quot;, ...). Default=&quot;close&quot;.</span>
+<span class="sd">        :param bool force_compute: If False and self.data contains already the columns, the computation is not executed.</span>
+<span class="sd">            Default=True.</span>
+<span class="sd">        :raises: * ValueError if `horizon` &lt;= 0.</span>
+<span class="sd">                 * ValueError if `target` is not a valid attribute.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="c1"># Check that horizon is a positive number</span>
+        <span class="k">if</span> <span class="n">horizon</span> <span class="o">&lt;=</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;horizon=</span><span class="si">{</span><span class="n">horizon</span><span class="si">}</span><span class="s2"> must be &gt; 0.&quot;</span><span class="p">)</span>
+
+        <span class="c1"># Fetch attribute list and check if target is within</span>
+        <span class="k">if</span> <span class="ow">not</span><span class="p">(</span><span class="n">target</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">attributes</span><span class="p">):</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;target=</span><span class="si">{</span><span class="n">target</span><span class="si">}</span><span class="s2"> is an incorrect key.&quot;</span><span class="p">)</span>
+
+        <span class="c1"># Set the name of the new column</span>
+        <span class="n">name</span> <span class="o">=</span> <span class="s2">&quot;future_return_</span><span class="si">%d</span><span class="s2">&quot;</span> <span class="o">%</span> <span class="n">horizon</span>
+        <span class="k">if</span> <span class="n">target</span> <span class="o">!=</span> <span class="s2">&quot;close&quot;</span><span class="p">:</span>
+            <span class="n">name</span> <span class="o">=</span> <span class="n">target</span> <span class="o">+</span> <span class="s2">&quot;_&quot;</span> <span class="o">+</span> <span class="n">name</span>
+
+        <span class="c1"># If the attribute has already been computed and we don&#39;t force, just exit</span>
+        <span class="k">if</span> <span class="n">name</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">attributes</span> <span class="ow">and</span> <span class="ow">not</span> <span class="n">force_compute</span><span class="p">:</span>
+            <span class="k">return</span>
+
+        <span class="c1"># Actual computation</span>
+        <span class="k">for</span> <span class="n">ticker</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">tickers</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">data</span><span class="p">[(</span><span class="n">ticker</span><span class="p">,</span> <span class="n">name</span><span class="p">)]</span> <span class="o">=</span> <span class="n">indicators</span><span class="o">.</span><span class="n">future_return</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">data</span><span class="p">[(</span><span class="n">ticker</span><span class="p">,</span> <span class="n">target</span><span class="p">)],</span> <span class="n">horizon</span><span class="p">)</span>
+
+        <span class="c1"># Sorting the columns</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">data</span><span class="o">.</span><span class="n">sort_index</span><span class="p">(</span><span class="n">axis</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">inplace</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="StockData.past_return"><a class="viewcode-back" href="../../sources.html#pynanz.StockData.past_return">[docs]</a>    <span class="k">def</span> <span class="nf">past_return</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span>
+                    <span class="n">horizon</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">1</span><span class="p">,</span>
+                    <span class="n">target</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;close&quot;</span><span class="p">,</span>
+                    <span class="n">force_compute</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        For a given target (default=\&quot;close\&quot;), computes the past return over every (\&quot;ticker_symbol\&quot;, \&quot;target\&quot;)</span>
+<span class="sd">        columns of the pd.DataFrame self.data. This function applies :func:`pynanz.indicators.past_return`.</span>
+
+<span class="sd">        :param int horizon: Time horizon, a positive integer. Default=1.</span>
+<span class="sd">        :param str target: Name of the targeted attribute (e.g. &quot;close&quot;, &quot;open&quot;, ...). Default=&quot;close&quot;.</span>
+<span class="sd">        :param bool force_compute: If False and self.data contains already the columns, the computation is not executed.</span>
+<span class="sd">            Default=True.</span>
+<span class="sd">        :raises: * ValueError if `horizon` &lt;= 0.</span>
+<span class="sd">                 * ValueError if `target` is not a valid attribute.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="c1"># Check that horizon is a positive number</span>
+        <span class="k">if</span> <span class="n">horizon</span> <span class="o">&lt;=</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;horizon=</span><span class="si">{</span><span class="n">horizon</span><span class="si">}</span><span class="s2"> must be &gt; 0.&quot;</span><span class="p">)</span>
+
+        <span class="c1"># Fetch attribute list and check if target is within</span>
+        <span class="k">if</span> <span class="ow">not</span><span class="p">(</span><span class="n">target</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">attributes</span><span class="p">):</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">target</span><span class="si">}</span><span class="s2"> is an incorrect key.&quot;</span><span class="p">)</span>
+
+        <span class="c1"># Set the name of the new column</span>
+        <span class="n">name</span> <span class="o">=</span> <span class="s2">&quot;past_return_</span><span class="si">%d</span><span class="s2">&quot;</span> <span class="o">%</span> <span class="n">horizon</span>
+        <span class="k">if</span> <span class="n">target</span> <span class="o">!=</span> <span class="s2">&quot;close&quot;</span><span class="p">:</span>
+            <span class="n">name</span> <span class="o">=</span> <span class="n">target</span> <span class="o">+</span> <span class="s2">&quot;_&quot;</span> <span class="o">+</span> <span class="n">name</span>
+
+        <span class="c1"># If the attribute has already been computed and we don&#39;t force, just exit</span>
+        <span class="k">if</span> <span class="n">name</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">attributes</span> <span class="ow">and</span> <span class="ow">not</span> <span class="n">force_compute</span><span class="p">:</span>
+            <span class="k">return</span>
+
+        <span class="c1"># Actual computation</span>
+        <span class="k">for</span> <span class="n">ticker</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">tickers</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">data</span><span class="p">[(</span><span class="n">ticker</span><span class="p">,</span> <span class="n">name</span><span class="p">)]</span> <span class="o">=</span> <span class="n">indicators</span><span class="o">.</span><span class="n">past_return</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">data</span><span class="p">[(</span><span class="n">ticker</span><span class="p">,</span> <span class="n">target</span><span class="p">)],</span> <span class="n">horizon</span><span class="p">)</span>
+
+        <span class="c1"># Sorting the columns</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">data</span><span class="o">.</span><span class="n">sort_index</span><span class="p">(</span><span class="n">axis</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">inplace</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="StockData.ema"><a class="viewcode-back" href="../../sources.html#pynanz.StockData.ema">[docs]</a>    <span class="k">def</span> <span class="nf">ema</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span>
+            <span class="n">span</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">10</span><span class="p">,</span>
+            <span class="n">target</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;close&quot;</span><span class="p">,</span>
+            <span class="n">force_compute</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        For a given target (default=&quot;close&quot;), computes the Exponentially Moving Average (EMA) for every column</span>
+<span class="sd">        (\&quot;ticker_symbol\&quot;, \&quot;target\&quot;) of the pd.DataFrame self.data. This function applies</span>
+<span class="sd">        :func:`pynanz.indicators.ema`.</span>
+
+<span class="sd">        :param int span: Time span, a positive integer. Default=10.</span>
+<span class="sd">        :param str target: Name of the targeted attribute (e.g. &quot;close&quot;, &quot;open&quot;, ...). Default=&quot;close&quot;.</span>
+<span class="sd">        :param bool force_compute: If False and self.data contains already the columns, the computation is not executed.</span>
+<span class="sd">            Default=True.</span>
+<span class="sd">        :raises: * ValueError if `span` &lt;= 0.</span>
+<span class="sd">                 * ValueError if `target` is not a valid attribute.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="c1"># Check that horizon is a positive number</span>
+        <span class="k">if</span> <span class="n">span</span> <span class="o">&lt;=</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;span=</span><span class="si">{</span><span class="n">span</span><span class="si">}</span><span class="s2"> must be &gt; 0.&quot;</span><span class="p">)</span>
+
+        <span class="c1"># Fetch attribute list and check if target is within</span>
+        <span class="k">if</span> <span class="ow">not</span><span class="p">(</span><span class="n">target</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">attributes</span><span class="p">):</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">target</span><span class="si">}</span><span class="s2"> is an incorrect key.&quot;</span><span class="p">)</span>
+
+        <span class="c1"># Set the name of the new column</span>
+        <span class="n">name</span> <span class="o">=</span> <span class="s2">&quot;ema_</span><span class="si">%d</span><span class="s2">&quot;</span> <span class="o">%</span> <span class="n">span</span>
+        <span class="k">if</span> <span class="n">target</span> <span class="o">!=</span> <span class="s2">&quot;close&quot;</span><span class="p">:</span>
+            <span class="n">name</span> <span class="o">=</span> <span class="n">target</span> <span class="o">+</span> <span class="s2">&quot;_&quot;</span> <span class="o">+</span> <span class="n">name</span>
+
+        <span class="c1"># If the attribute has already been computed and we don&#39;t force, just exit</span>
+        <span class="k">if</span> <span class="n">name</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">attributes</span> <span class="ow">and</span> <span class="ow">not</span> <span class="n">force_compute</span><span class="p">:</span>
+            <span class="k">return</span>
+
+        <span class="c1"># Actual computation</span>
+        <span class="k">for</span> <span class="n">ticker</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">tickers</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">data</span><span class="p">[(</span><span class="n">ticker</span><span class="p">,</span> <span class="n">name</span><span class="p">)]</span> <span class="o">=</span> <span class="n">indicators</span><span class="o">.</span><span class="n">ema</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">data</span><span class="p">[(</span><span class="n">ticker</span><span class="p">,</span> <span class="n">target</span><span class="p">)],</span> <span class="n">span</span><span class="p">)</span>
+
+        <span class="c1"># Sorting the columns</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">data</span><span class="o">.</span><span class="n">sort_index</span><span class="p">(</span><span class="n">axis</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">inplace</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="StockData.macd"><a class="viewcode-back" href="../../sources.html#pynanz.StockData.macd">[docs]</a>    <span class="k">def</span> <span class="nf">macd</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span>
+             <span class="n">short_span</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">12</span><span class="p">,</span>
+             <span class="n">long_span</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">26</span><span class="p">,</span>
+             <span class="n">signal_span</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">9</span><span class="p">,</span>
+             <span class="n">target</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;close&quot;</span><span class="p">,</span>
+             <span class="n">force_compute</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        For a given target (default=&quot;close&quot;), computes the Moving Average Convergence Divergence (MACD) indicator over</span>
+<span class="sd">        every (\&quot;ticker_symbol\&quot;, \&quot;target\&quot;) columns of the pd.DataFrame self.data. This function applies</span>
+<span class="sd">        :func:`pynanz.indicators.macd`.</span>
+
+<span class="sd">        This functions creates three new colums: f&quot;macd_{`short_span`}_{`long_span`}_{`signal_span`}&quot;,</span>
+<span class="sd">        f&quot;sig_macd_{`short_span`}_{`long_span`}_{`signal_span`}&quot; and</span>
+<span class="sd">        f&quot;hist_macd_{`short_span`}_{`long_span`}_{`signal_span`}&quot;, which are the MACD, signal and histogram</span>
+<span class="sd">        respectively. If the target is not &quot;close&quot;, the target name will be prepended.</span>
+
+<span class="sd">        :param int short_span: Span for the fast EMA curve. Default=12.</span>
+<span class="sd">        :param int long_span:  Span for the slow EMA curve. Default=26.</span>
+<span class="sd">        :param int signal_span: Span for the signal line. Default=9.</span>
+<span class="sd">        :param str target: Target column to compute the indicator. Default=&quot;close&quot;.</span>
+<span class="sd">        :param bool force_compute: If False and self.data contains already the columns, the computation is not executed.</span>
+<span class="sd">            Default=True.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="c1"># Set name</span>
+        <span class="n">name</span> <span class="o">=</span> <span class="s2">&quot;macd_</span><span class="si">%d</span><span class="s2">_</span><span class="si">%d</span><span class="s2">_</span><span class="si">%d</span><span class="s2">&quot;</span> <span class="o">%</span> <span class="p">(</span><span class="n">short_span</span><span class="p">,</span> <span class="n">long_span</span><span class="p">,</span> <span class="n">signal_span</span><span class="p">)</span>
+        <span class="n">name</span> <span class="o">=</span> <span class="p">[</span><span class="n">name</span><span class="p">,</span> <span class="s2">&quot;sig_&quot;</span> <span class="o">+</span> <span class="n">name</span><span class="p">,</span> <span class="s2">&quot;hist_&quot;</span> <span class="o">+</span> <span class="n">name</span><span class="p">]</span>
+        <span class="k">if</span> <span class="n">target</span> <span class="o">!=</span> <span class="s2">&quot;close&quot;</span><span class="p">:</span>
+            <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">name</span><span class="p">)):</span>
+                <span class="n">name</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">=</span> <span class="n">target</span> <span class="o">+</span> <span class="s2">&quot;_&quot;</span> <span class="o">+</span> <span class="n">name</span><span class="p">[</span><span class="n">i</span><span class="p">]</span>
+
+        <span class="c1"># If all the name is already in the list and we don&#39;t force, exit.</span>
+        <span class="n">c</span> <span class="o">=</span> <span class="mi">0</span>
+        <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">name</span><span class="p">)):</span>
+            <span class="k">if</span> <span class="n">name</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">attributes</span> <span class="ow">and</span> <span class="ow">not</span> <span class="n">force_compute</span><span class="p">:</span>
+                <span class="n">c</span> <span class="o">+=</span> <span class="mi">1</span>
+        <span class="k">if</span> <span class="n">c</span> <span class="o">==</span> <span class="nb">int</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">name</span><span class="p">)):</span>
+            <span class="k">return</span>
+
+        <span class="c1"># Compute the MACD</span>
+        <span class="k">for</span> <span class="n">ticker</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">tickers</span><span class="p">:</span>
+            <span class="n">x</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">data</span><span class="p">[(</span><span class="n">ticker</span><span class="p">,</span> <span class="n">target</span><span class="p">)]</span>
+            <span class="n">macd</span><span class="p">,</span> <span class="n">sig</span><span class="p">,</span> <span class="n">hist</span> <span class="o">=</span> <span class="n">indicators</span><span class="o">.</span><span class="n">macd</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">short_span</span><span class="p">,</span> <span class="n">long_span</span><span class="p">,</span> <span class="n">signal_span</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">data</span><span class="p">[(</span><span class="n">ticker</span><span class="p">,</span> <span class="n">name</span><span class="p">[</span><span class="mi">0</span><span class="p">])]</span> <span class="o">=</span> <span class="n">macd</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">data</span><span class="p">[(</span><span class="n">ticker</span><span class="p">,</span> <span class="n">name</span><span class="p">[</span><span class="mi">1</span><span class="p">])]</span> <span class="o">=</span> <span class="n">sig</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">data</span><span class="p">[(</span><span class="n">ticker</span><span class="p">,</span> <span class="n">name</span><span class="p">[</span><span class="mi">2</span><span class="p">])]</span> <span class="o">=</span> <span class="n">hist</span>
+
+        <span class="c1"># Sort the columns</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">data</span><span class="o">.</span><span class="n">sort_index</span><span class="p">(</span><span class="n">axis</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">inplace</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="StockData.stochastic"><a class="viewcode-back" href="../../sources.html#pynanz.StockData.stochastic">[docs]</a>    <span class="k">def</span> <span class="nf">stochastic</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span>
+                   <span class="n">period</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">14</span><span class="p">,</span>
+                   <span class="n">target</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;close&quot;</span><span class="p">,</span>
+                   <span class="n">force_compute</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Computes the stochastic indicator over every (\&quot;ticker_symbol\&quot;, \&quot;close\&quot;) columns of the pd.DataFrame</span>
+<span class="sd">        self.data. This function applies :func:`pynanz.indicators.stochastic`.</span>
+
+<span class="sd">        This functions creates two new colums: f&quot;stochastic_{`period`}&quot; and f&quot;smoothed_stochastic_{`period`}&quot;.</span>
+<span class="sd">        If the target is not &quot;close&quot;, the target name will be prepended.</span>
+
+<span class="sd">        :param int period: Period defining the stochastic indicator. Default=14.</span>
+<span class="sd">        :param str target: Target column to compute the indicator. Default=&quot;close&quot;.</span>
+<span class="sd">        :param bool force_compute: If False and self.data contains already the columns, the computation is not executed.</span>
+<span class="sd">            Default=True.</span>
+<span class="sd">        :raises:    * NotImplemented if target is not \&quot;close\&quot;.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="n">target</span> <span class="o">!=</span> <span class="s2">&quot;close&quot;</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="bp">NotImplemented</span><span class="p">(</span><span class="s2">&quot;target can only be </span><span class="se">\&quot;</span><span class="s2">close</span><span class="se">\&quot;</span><span class="s2">.&quot;</span><span class="p">)</span>
+
+        <span class="n">name</span> <span class="o">=</span> <span class="s2">&quot;stochastic_</span><span class="si">%d</span><span class="s2">&quot;</span> <span class="o">%</span> <span class="n">period</span>
+        <span class="n">name</span> <span class="o">=</span> <span class="p">[</span><span class="n">name</span><span class="p">,</span> <span class="s2">&quot;smoothed_</span><span class="si">%s</span><span class="s2">&quot;</span> <span class="o">%</span> <span class="n">name</span><span class="p">]</span>
+        <span class="k">if</span> <span class="n">target</span> <span class="o">!=</span> <span class="s2">&quot;close&quot;</span><span class="p">:</span>
+            <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">name</span><span class="p">)):</span>
+                <span class="n">name</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">=</span> <span class="n">target</span> <span class="o">+</span> <span class="s2">&quot;_&quot;</span> <span class="o">+</span> <span class="n">name</span>
+
+        <span class="c1"># If all the name is already in the list and we don&#39;t force, exit.</span>
+        <span class="n">c</span> <span class="o">=</span> <span class="mi">0</span>
+        <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">name</span><span class="p">)):</span>
+            <span class="k">if</span> <span class="n">name</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">attributes</span> <span class="ow">and</span> <span class="ow">not</span> <span class="n">force_compute</span><span class="p">:</span>
+                <span class="n">c</span> <span class="o">+=</span> <span class="mi">1</span>
+        <span class="k">if</span> <span class="n">c</span> <span class="o">==</span> <span class="nb">int</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">name</span><span class="p">)):</span>
+            <span class="k">return</span>
+
+        <span class="c1"># Compute the indicator</span>
+        <span class="k">for</span> <span class="n">ticker</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">tickers</span><span class="p">:</span>
+            <span class="n">x</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">data</span><span class="p">[(</span><span class="n">ticker</span><span class="p">,</span> <span class="s2">&quot;close&quot;</span><span class="p">)]</span>
+            <span class="n">x_low</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">data</span><span class="p">[(</span><span class="n">ticker</span><span class="p">,</span> <span class="s2">&quot;low&quot;</span><span class="p">)]</span>
+            <span class="n">x_high</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">data</span><span class="p">[(</span><span class="n">ticker</span><span class="p">,</span> <span class="s2">&quot;high&quot;</span><span class="p">)]</span>
+            <span class="n">y</span><span class="p">,</span> <span class="n">y_smooth</span> <span class="o">=</span> <span class="n">indicators</span><span class="o">.</span><span class="n">stochastic</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">x_low</span><span class="p">,</span> <span class="n">x_high</span><span class="p">,</span> <span class="n">period</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">data</span><span class="p">[(</span><span class="n">ticker</span><span class="p">,</span> <span class="n">name</span><span class="p">[</span><span class="mi">0</span><span class="p">])]</span> <span class="o">=</span> <span class="n">y</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">data</span><span class="p">[(</span><span class="n">ticker</span><span class="p">,</span> <span class="n">name</span><span class="p">[</span><span class="mi">1</span><span class="p">])]</span> <span class="o">=</span> <span class="n">y_smooth</span>
+
+        <span class="c1"># Sort the columns</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">data</span><span class="o">.</span><span class="n">sort_index</span><span class="p">(</span><span class="n">axis</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">inplace</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="StockData.oldest_date"><a class="viewcode-back" href="../../sources.html#pynanz.StockData.oldest_date">[docs]</a>    <span class="k">def</span> <span class="nf">oldest_date</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        :return: Oldest date which is the first index of the the pd.DataFrame.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">data</span><span class="o">.</span><span class="n">index</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span></div>
+
+<div class="viewcode-block" id="StockData.newest_date"><a class="viewcode-back" href="../../sources.html#pynanz.StockData.newest_date">[docs]</a>    <span class="k">def</span> <span class="nf">newest_date</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        :return: Newest date which is the last index of the the pd.DataFrame.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">data</span><span class="o">.</span><span class="n">index</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span></div>
+
+<div class="viewcode-block" id="StockData.is_trading_day"><a class="viewcode-back" href="../../sources.html#pynanz.StockData.is_trading_day">[docs]</a>    <span class="k">def</span> <span class="nf">is_trading_day</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span>
+                       <span class="n">date</span><span class="p">:</span> <span class="n">datetime</span><span class="o">.</span><span class="n">date</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+                       <span class="n">day</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+                       <span class="n">month</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+                       <span class="n">year</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="kc">None</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Check if the date is an actual trading day, i.e. if it is included in the self.data.index.</span>
+
+<span class="sd">        :param datetime.date,str date: Date to check. Can be a datetime.date object or a str \&quot;DD-MM-YYYY\&quot;. If set to</span>
+<span class="sd">            None, `day`, `month` and `year` **must** be defined.</span>
+<span class="sd">        :param int day: Day to check. Integer value from 1 to 31.</span>
+<span class="sd">        :param int month: Month to check. Integer value from 1 to 12.</span>
+<span class="sd">        :param int year: Year to check. Integer value, e.g. 2012.</span>
+<span class="sd">        :return: True if the date is a trading day, False otherwise.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="nb">all</span><span class="p">(</span><span class="n">v</span> <span class="ow">is</span> <span class="kc">None</span> <span class="k">for</span> <span class="n">v</span> <span class="ow">in</span> <span class="p">[</span><span class="n">date</span><span class="p">,</span> <span class="n">day</span><span class="p">,</span> <span class="n">month</span><span class="p">,</span> <span class="n">year</span><span class="p">]):</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;data or (day, month, year) must be defined&quot;</span><span class="p">)</span>
+        <span class="k">elif</span> <span class="n">date</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">date</span><span class="p">,</span> <span class="nb">str</span><span class="p">):</span>
+                <span class="n">words</span> <span class="o">=</span> <span class="n">date</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="s2">&quot;-&quot;</span><span class="p">,</span> <span class="s2">&quot; &quot;</span><span class="p">)</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="s2">&quot;/&quot;</span><span class="p">,</span> <span class="s2">&quot; &quot;</span><span class="p">)</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="s2">&quot;</span><span class="se">\t</span><span class="s2">&quot;</span><span class="p">,</span> <span class="s2">&quot; &quot;</span><span class="p">)</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s2">&quot; &quot;</span><span class="p">)</span>
+                <span class="n">words</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="nb">filter</span><span class="p">(</span><span class="kc">None</span><span class="p">,</span> <span class="n">words</span><span class="p">))</span>
+                <span class="n">day</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">words</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>
+                <span class="n">month</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">words</span><span class="p">[</span><span class="mi">1</span><span class="p">])</span>
+                <span class="n">year</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">words</span><span class="p">[</span><span class="mi">2</span><span class="p">])</span>
+            <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">date</span><span class="p">,</span> <span class="n">datetime</span><span class="o">.</span><span class="n">datetime</span><span class="p">):</span>
+                <span class="n">day</span> <span class="o">=</span> <span class="n">date</span><span class="o">.</span><span class="n">day</span>
+                <span class="n">month</span> <span class="o">=</span> <span class="n">date</span><span class="o">.</span><span class="n">month</span>
+                <span class="n">year</span> <span class="o">=</span> <span class="n">date</span><span class="o">.</span><span class="n">year</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="s2">&quot;date must be of type datetime.date, datetime.datetime or str&quot;</span><span class="p">,</span> <span class="nb">type</span><span class="p">(</span><span class="n">date</span><span class="p">))</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">if</span> <span class="nb">any</span><span class="p">(</span><span class="n">v</span> <span class="ow">is</span> <span class="kc">None</span> <span class="k">for</span> <span class="n">v</span> <span class="ow">in</span> <span class="p">[</span><span class="n">day</span><span class="p">,</span> <span class="n">month</span><span class="p">,</span> <span class="n">year</span><span class="p">]):</span>
+                <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;day, month and year must all be defined if date is not defined.&quot;</span><span class="p">)</span>
+
+        <span class="k">return</span> <span class="nb">bool</span><span class="p">(</span><span class="n">datetime</span><span class="o">.</span><span class="n">date</span><span class="p">(</span><span class="n">year</span><span class="o">=</span><span class="n">year</span><span class="p">,</span> <span class="n">month</span><span class="o">=</span><span class="n">month</span><span class="p">,</span> <span class="n">day</span><span class="o">=</span><span class="n">day</span><span class="p">)</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">data</span><span class="o">.</span><span class="n">index</span><span class="p">)</span></div></div>
+</pre></div>
+
+           </div>
+           
+          </div>
+          <footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &#169; Copyright 2021, Leandro Salemi.
+
+    </p>
+  </div>
+    
+    
+    
+    Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    
+    provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script>
+
+  
+  
+    
+   
+
+</body>
+</html>
