@@ -4,18 +4,26 @@ import pandas as pd
 from yahooquery import Ticker
 from typing import Union
 from . import indicators
+import pickle
+import copy
 
 
-class StockData:
+class Market:
     """
-    StockData is a class to store *Open, High, Low, Close, Volume* (OHLCV) data of financial assets (e.g. stocks, ETFs).
-    The member function :func:`pynanz.StockData.download` can be called to download data from yahoofinance (uses
-    `yahooquery <https://yahooquery.dpguthrie.com>`_ as backend).
+    Market is a class to store and handle market data. The main purpose of a Market object is to store the
+    *Open, High, Low, Close, Volume (OHLCV)* daily data of financial assets, i.e. stocks, ETFs, ...
+    The data is stored in the attribute `self.data`, which is a pandas.DataFrame.
 
-    The main attribute of a `StockData` object is `self.data`, which is a pandas.DataFrame object. The index of the
-    DataFrame is a list of `datetime.date` object which correspond to **trading** days. The columns are muti-indexed:
-    they are tuple of size=2 whose first entry is the `ticker symbol` (e.g. "AAPL", "GOOG") and second the attribute
-    (e.g. "open", "high").
+    Retrieval of market data can be done via the member function :func:`pynanz.Market.download`, which downloads
+    data from yahoofinance by using `yahooquery <https://yahooquery.dpguthrie.com>`_ as backend. Already retrieved
+    data can be saved (see :func:`pynanz.Market.save`) and loaded later (see :func:`pynanz.Market.load`).
+
+    The index of `self.data` are `datetime.data` objects corresponding to the trading days (trading days are
+    not necessarily contiguous!).
+    The columns are multi-indexed: each column label is a tuple of len=2 whose first entry is the ticker symbol
+    (e.g. "AAPL", "GOOG") and second the attribute (e.g. "open", "high").
+    For instance, self.data[("AAPL", "close")] is a pd.Series (1D object) which contains the closing price
+    for Apple stock.
 
     Financial indicators such as exponentially moving averages (EMA) or moving average convergence divergence (MACD)
     can also be computed. Such indicators can be used to build investment strategies (see Strategy class).
@@ -38,8 +46,8 @@ class StockData:
         """
         Constructor for the StockData class. The object needs to be initialized using either
 
-        * :func:`pynanz.StockData.download`
-        * :func:`pynanz.StockData.load` (if a call to :func:`pynanz.StockData.save` was done before).
+        * :func:`pynanz.Market.download`
+        * :func:`pynanz.Market.load` (if a call to :func:`pynanz.Market.save` was done before).
         """
 
         # pd.DataFrame containing the data.
@@ -47,6 +55,12 @@ class StockData:
 
         # List of tickers, e.g. ["AAPL", "GOOG", "USFD", "ARKF"]. Access via property
         self.tickers = None
+
+        # pd.Dataframe containing metadata related to equities
+        self.equity = None
+
+        # pd.Dataframe containing metadata related to ETFs
+        self.etf = None
 
     @property
     def tickers(self):
@@ -83,8 +97,8 @@ class StockData:
 
     def download(self,
                  tickers: Union[list, str],
-                 start_date: datetime.date = None,
-                 end_date: datetime.date = None,
+                 start_date: Union[datetime.date, pd.Timestamp] = None,
+                 end_date: Union[datetime.date, pd.Timestamp] = None,
                  tolerance: int = 15,
                  clean_nan_index: bool = True):
         """
@@ -110,6 +124,12 @@ class StockData:
         # Reset the pd.DataFrame to None
         self.data = None
 
+        # Yahooquery only considers datetime objects
+        if isinstance(start_date, pd.Timestamp):
+            start_date = datetime.date(year=start_date.year, month=start_date.month, day=start_date.day)
+        if isinstance(end_date, pd.Timestamp):
+            end_date = datetime.date(year=end_date.year, month=end_date.month, day=end_date.day)
+
         too_new = []  # Hold the ticker symbols of assets which are too recent (if applicable)
         not_found = []  # Hold the ticker symbols of assets which are not found (if applicable)
         for ticker in self.tickers:
@@ -127,6 +147,7 @@ class StockData:
             if not isinstance(df, pd.DataFrame):
                 not_found.append([ticker, df])
                 continue
+
             index = pd.MultiIndex.from_product([[ticker], df.columns.values])
             df.columns = index
             df.reset_index(level=0, drop=True, inplace=True)
@@ -154,17 +175,77 @@ class StockData:
         if clean_nan_index:
             self.data.dropna(axis=0, inplace=True)
 
+        # Only keep "Open, High, Low, Close, Volume" (OHLCV)
+        drop_columns = [x for x in self.data.columns if x[1] not in ["open", "high", "low", "close", "volume"]]
+        self.data.drop(columns=drop_columns, inplace=True)
+        self.data.sort_index(axis=1, inplace=True)
+
+        # Transform the datetime index into pd.Timestamp
+        self.data.index = self.data.index.map(pd.Timestamp)
+
+        # Fetch tickers
         self.tickers = np.unique([x for x, y in self.data.columns])
 
-    def load(self, filename):
+        # Fetch metadata
+        self._fetch_metadata()
+
+    def _fetch_metadata(self):
+        t = Ticker(list(self.tickers))
+
+        self.equity = []
+        self.etf = []
+
+        # Split between EQUITY and ETF
+        quote_types = t.quote_type
+        for ticker in self.tickers:
+            if quote_types[ticker]["quoteType"].lower() == "equity":
+                self.equity.append(ticker)
+            elif quote_types[ticker]["quoteType"].lower() == "etf":
+                self.etf.append(ticker)
+            else:
+                raise ValueError(f"{ticker} is neither equity nor etf.")
+
+        self.equity = pd.DataFrame(index=self.equity)
+        self.etf = pd.DataFrame(index=self.etf)
+
+        # Get the sector/industry for equities
+        t = Ticker(list(self.equity.index))
+        tmp = t.summary_profile
+        self.equity["industry"] = [tmp[x]["industry"].lower() for x in self.equity.index]
+        self.equity["sector"] = [tmp[x]["sector"].lower() for x in self.equity.index]
+
+        # Get the sector/industry for equities
+        t = Ticker(list(self.etf.index))
+        tmp = t.fund_sector_weightings
+
+        for ticker in self.etf.index:
+            if len(self.etf.columns) == 0:
+                self.etf[tmp[ticker].index] = 0.0
+            self.etf.loc[ticker] = tmp[ticker]
+
+        # rename columns
+        rename = dict([(x, x.replace("_", " ")) for x in self.etf.columns])
+        rename["realestate"] = "real estate"
+        self.etf.rename(columns=rename, inplace=True)
+
+    def row(self, loc: pd.Timestamp, target: str = None, drop_level: bool = True):
+        if target:
+            return self.data.loc[loc].xs(target, level=1, drop_level=drop_level)
+        else:
+            return self.data.loc[loc]
+
+    @staticmethod
+    def load(filename):
         """
         Load data from a pickle file. Need :func:`pynanz.StockData.save` to be called in a previous run.
 
-        :param str filename: Path to the pickle file, e.g. `"./stock_data.pkl"`. No default.
+        :param str filename: Path to the pickle file, e.g. `"./market_data.pkl"`. No default.
+        :return: A pynanz.Market object instance.
         """
         # Read the pickle form the pd.read_pickle() function
-        self.data = pd.read_pickle(filename)
-        self.tickers = np.unique([x for x, y in self.data.columns])
+        with open(filename, 'rb') as f:
+            x = pickle.load(f)
+        return x
 
     def save(self, filename: str):
         """
@@ -172,7 +253,8 @@ class StockData:
 
         :param str filename: Path to the pickle file, e.g. `"./stock_data.pkl"`
         """
-        pd.to_pickle(self.data, filename)
+        with open(filename, 'wb') as f:
+            pickle.dump(self, f)
 
     def future_return(self,
                       horizon: int = 1,
@@ -399,38 +481,43 @@ class StockData:
         """
         return self.data.index[-1]
 
-    def is_trading_day(self,
-                       date: datetime.date = None,
-                       day: int = None,
-                       month: int = None,
-                       year: int = None):
+    def is_trading_day(self, date: Union[datetime.date, pd.Timestamp]):
         """
         Check if the date is an actual trading day, i.e. if it is included in the self.data.index.
 
-        :param datetime.date,str date: Date to check. Can be a datetime.date object or a str \"DD-MM-YYYY\". If set to
-            None, `day`, `month` and `year` **must** be defined.
-        :param int day: Day to check. Integer value from 1 to 31.
-        :param int month: Month to check. Integer value from 1 to 12.
-        :param int year: Year to check. Integer value, e.g. 2012.
-        :return: True if the date is a trading day, False otherwise.
+        :param datetime.date,pd.Timestamp date: Date to check. Can be a datetime.date object or a pd.Timestamp object.
+        :return: True if the date has trading date, False otherwise
+         
         """
-        if all(v is None for v in [date, day, month, year]):
-            raise ValueError("data or (day, month, year) must be defined")
-        elif date is not None:
-            if isinstance(date, str):
-                words = date.replace("-", " ").replace("/", " ").replace("\t", " ").split(" ")
-                words = list(filter(None, words))
-                day = int(words[0])
-                month = int(words[1])
-                year = int(words[2])
-            elif isinstance(date, datetime.datetime):
-                day = date.day
-                month = date.month
-                year = date.year
-            else:
-                raise TypeError("date must be of type datetime.date, datetime.datetime or str", type(date))
-        else:
-            if any(v is None for v in [day, month, year]):
-                raise ValueError("day, month and year must all be defined if date is not defined.")
+        if isinstance(date, datetime.date):
+            date = pd.Timestamp(year=date.year, month=date.month, day=date.day)
 
-        return bool(datetime.date(year=year, month=month, day=day) in self.data.index)
+        if not isinstance(date, pd.Timestamp):
+            raise TypeError(f"type(date)={type(date)} must be of type datetime.date or pd.Timestamp")
+
+        return bool(date in self.data.index.values)
+
+    def backtester(self,
+                        start_date: pd.Timestamp = None,
+                        end_date: pd.Timestamp = None,
+                        history: int = None):
+        # Default values
+        if start_date is None:
+            start_date = self.oldest_date()
+        if end_date is None:
+            end_date = self.newest_date()
+
+        # Initialize the date
+        date = start_date
+
+        while date < end_date:
+            if self.is_trading_day(date):
+                # Fetch history if needed
+                history_data = None
+                if history:
+                    idx = self.data.index.get_loc(date)
+                    history_data = self.data.iloc[idx-history+1:idx+1].copy()
+                yield date, self.row(date).unstack(level=1), history_data
+            # Increment the date
+            date += pd.Timedelta(days=1)
+

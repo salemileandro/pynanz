@@ -1,0 +1,19 @@
+Metadata-Version: 2.1
+Name: pynanz-salemileandro
+Version: 0.0.0
+Summary: Python toolkit for financial planning.
+Home-page: https://github.com/salemileandro/pynanz
+Author: Leandro Salemi
+Author-email: salemileandro@gmail.com
+License: UNKNOWN
+Description: # Pynanz
+        Author: Leandro Salemi  
+        E-mail: salemileandro@gmail.com  
+        Version: 0.0.0
+        
+Platform: UNKNOWN
+Classifier: Programming Language :: Python :: 3
+Classifier: License :: OSI Approved :: MIT License
+Classifier: Operating System :: OS Independent
+Requires-Python: >=3.8
+Description-Content-Type: text/markdown
