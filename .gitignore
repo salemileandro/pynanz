@@ -5,3 +5,8 @@ doc/*
 .idea/*
 nohup*
 build.sh
+*/.ipynb_checkpoints/*
+.ipynb_checkpoints/*
+build/*
+dist/*
+pynanz_salemileandro.egg-info/*

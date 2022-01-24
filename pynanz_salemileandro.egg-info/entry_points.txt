@@ -1,3 +1,0 @@
-[console_scripts]
-pynanz = pynanz.cli:main
-
