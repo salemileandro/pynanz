@@ -3,7 +3,7 @@ Documentation
 
 StockData (class)
 --------------------
-.. autoclass:: pynanz.StockData
+.. autoclass:: pynanz.Market
   	:members:
 	:exclude-members: __weakref__
   	:special-members:
