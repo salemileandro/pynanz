@@ -15,7 +15,6 @@
         <script src="_static/jquery.js"></script>
         <script src="_static/underscore.js"></script>
         <script src="_static/doctools.js"></script>
-        <script async="async" src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
     <script src="_static/js/theme.js"></script>
     <link rel="index" title="Index" href="genindex.html" />
     <link rel="search" title="Search" href="search.html" />
@@ -40,8 +39,6 @@
               <ul class="current">
 <li class="toctree-l1 current"><a class="current reference internal" href="#">Documentation</a><ul>
 <li class="toctree-l2"><a class="reference internal" href="#stockdata-class">StockData (class)</a></li>
-<li class="toctree-l2"><a class="reference internal" href="#meanvariance-class">MeanVariance (class)</a></li>
-<li class="toctree-l2"><a class="reference internal" href="#module-pynanz.indicators">indicators (module)</a></li>
 </ul>
 </li>
 </ul>
@@ -77,20 +74,17 @@
 <dl class="py class">
 <dt class="sig sig-object py" id="pynanz.Market">
 <em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">pynanz.</span></span><span class="sig-name descname"><span class="pre">Market</span></span><a class="reference internal" href="_modules/pynanz/Market.html#Market"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#pynanz.Market" title="Permalink to this definition"></a></dt>
-<dd><p>Market is a class to store and handle market data. The main purpose of a Market object is to store the
-<em>Open, High, Low, Close, Volume (OHLCV)</em> daily data of financial assets, i.e. stocks, ETFs, …
-The data is stored in the attribute <cite>self.data</cite>, which is a pandas.DataFrame.</p>
-<p>Retrieval of market data can be done via the member function <a class="reference internal" href="#pynanz.Market.download" title="pynanz.Market.download"><code class="xref py py-func docutils literal notranslate"><span class="pre">pynanz.Market.download()</span></code></a>, which downloads
-data from yahoofinance by using <a class="reference external" href="https://yahooquery.dpguthrie.com">yahooquery</a> as backend. Already retrieved
-data can be saved (see <a class="reference internal" href="#pynanz.Market.save" title="pynanz.Market.save"><code class="xref py py-func docutils literal notranslate"><span class="pre">pynanz.Market.save()</span></code></a>) and loaded later (see <a class="reference internal" href="#pynanz.Market.load" title="pynanz.Market.load"><code class="xref py py-func docutils literal notranslate"><span class="pre">pynanz.Market.load()</span></code></a>).</p>
-<p>The index of <cite>self.data</cite> are <cite>datetime.data</cite> objects corresponding to the trading days (trading days are
-not necessarily contiguous!).
-The columns are multi-indexed: each column label is a tuple of len=2 whose first entry is the ticker symbol
-(e.g. “AAPL”, “GOOG”) and second the attribute (e.g. “open”, “high”).
-For instance, self.data[(“AAPL”, “close”)] is a pd.Series (1D object) which contains the closing price
-for Apple stock.</p>
-<p>Financial indicators such as exponentially moving averages (EMA) or moving average convergence divergence (MACD)
-can also be computed. Such indicators can be used to build investment strategies (see Strategy class).</p>
+<dd><p><cite>Market</cite> is a class for downloading, storing and handling market data. Data is downloaded from yahoofinance by
+using <a class="reference external" href="https://github.com/ranaroussi/yfinance">yfinance</a> as backend. Two types of data are downloaded</p>
+<ul class="simple">
+<li><p>Daily <em>Open, High, Low, Close, Volume (OHLCV)</em> of diverse financial assets (e.g. stocks, ETFs, …) that is
+stored in the attribute <cite>self.data</cite> of type pd.DataFrame.</p></li>
+<li><p>Metadata associated to the asset (e.g. sector type) that is stored in the attribute <cite>self.metadata</cite> of type
+pd.DataFrame.</p></li>
+</ul>
+<p>For <cite>self.data</cite>, the columns are multi-indexed, i.e. each column label is a tuple of len=2 whose first entry is the
+ticker symbol (e.g. “AAPL”, “GOOG”) and second the attribute (e.g. “open”, “high”). Diverse financial indicators
+such as exponentially moving averages (EMA) or moving average convergence divergence (MACD) can also be computed.</p>
 <p><strong>Note that:</strong></p>
 <ul class="simple">
 <li><p>Only daily data can be retrieved.</p></li>
@@ -148,7 +142,7 @@ Default is True (recommended).</p></li>
 <span class="sig-name descname"><span class="pre">ema</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">span</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">10</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">target</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">'close'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">force_compute</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/pynanz/Market.html#Market.ema"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#pynanz.Market.ema" title="Permalink to this definition"></a></dt>
 <dd><p>For a given target (default=”close”), computes the Exponentially Moving Average (EMA) for every column
 (“ticker_symbol”, “target”) of the pd.DataFrame self.data. This function applies
-<a class="reference internal" href="#pynanz.indicators.ema" title="pynanz.indicators.ema"><code class="xref py py-func docutils literal notranslate"><span class="pre">pynanz.indicators.ema()</span></code></a>.</p>
+<code class="xref py py-func docutils literal notranslate"><span class="pre">pynanz.indicators.ema()</span></code>.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><ul class="simple">
@@ -171,7 +165,7 @@ Default=True.</p></li>
 <dt class="sig sig-object py" id="pynanz.Market.future_return">
 <span class="sig-name descname"><span class="pre">future_return</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">horizon</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">target</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">'close'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">force_compute</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/pynanz/Market.html#Market.future_return"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#pynanz.Market.future_return" title="Permalink to this definition"></a></dt>
 <dd><p>For a given target (default=”close”), computes the future return over every (“ticker_symbol”, “target”)
-columns of the pd.DataFrame self.data. This function applies <a class="reference internal" href="#pynanz.indicators.future_return" title="pynanz.indicators.future_return"><code class="xref py py-func docutils literal notranslate"><span class="pre">pynanz.indicators.future_return()</span></code></a>.</p>
+columns of the pd.DataFrame self.data. This function applies <code class="xref py py-func docutils literal notranslate"><span class="pre">pynanz.indicators.future_return()</span></code>.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><ul class="simple">
@@ -223,7 +217,7 @@ Default=True.</p></li>
 <span class="sig-name descname"><span class="pre">macd</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">short_span</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">12</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">long_span</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">26</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">signal_span</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">9</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">target</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">'close'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">force_compute</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/pynanz/Market.html#Market.macd"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#pynanz.Market.macd" title="Permalink to this definition"></a></dt>
 <dd><p>For a given target (default=”close”), computes the Moving Average Convergence Divergence (MACD) indicator over
 every (“ticker_symbol”, “target”) columns of the pd.DataFrame self.data. This function applies
-<a class="reference internal" href="#pynanz.indicators.macd" title="pynanz.indicators.macd"><code class="xref py py-func docutils literal notranslate"><span class="pre">pynanz.indicators.macd()</span></code></a>.</p>
+<code class="xref py py-func docutils literal notranslate"><span class="pre">pynanz.indicators.macd()</span></code>.</p>
 <p>This functions creates three new colums: f”macd_{<cite>short_span</cite>}_{<cite>long_span</cite>}_{<cite>signal_span</cite>}”,
 f”sig_macd_{<cite>short_span</cite>}_{<cite>long_span</cite>}_{<cite>signal_span</cite>}” and
 f”hist_macd_{<cite>short_span</cite>}_{<cite>long_span</cite>}_{<cite>signal_span</cite>}”, which are the MACD, signal and histogram
@@ -266,7 +260,7 @@ Default=True.</p></li>
 <dt class="sig sig-object py" id="pynanz.Market.past_return">
 <span class="sig-name descname"><span class="pre">past_return</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">horizon</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">target</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">'close'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">force_compute</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/pynanz/Market.html#Market.past_return"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#pynanz.Market.past_return" title="Permalink to this definition"></a></dt>
 <dd><p>For a given target (default=”close”), computes the past return over every (“ticker_symbol”, “target”)
-columns of the pd.DataFrame self.data. This function applies <a class="reference internal" href="#pynanz.indicators.past_return" title="pynanz.indicators.past_return"><code class="xref py py-func docutils literal notranslate"><span class="pre">pynanz.indicators.past_return()</span></code></a>.</p>
+columns of the pd.DataFrame self.data. This function applies <code class="xref py py-func docutils literal notranslate"><span class="pre">pynanz.indicators.past_return()</span></code>.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><ul class="simple">
@@ -300,7 +294,7 @@ Default=True.</p></li>
 <dt class="sig sig-object py" id="pynanz.Market.stochastic">
 <span class="sig-name descname"><span class="pre">stochastic</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">period</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">14</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">target</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">'close'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">force_compute</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/pynanz/Market.html#Market.stochastic"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#pynanz.Market.stochastic" title="Permalink to this definition"></a></dt>
 <dd><p>Computes the stochastic indicator over every (“ticker_symbol”, “close”) columns of the pd.DataFrame
-self.data. This function applies <a class="reference internal" href="#pynanz.indicators.stochastic" title="pynanz.indicators.stochastic"><code class="xref py py-func docutils literal notranslate"><span class="pre">pynanz.indicators.stochastic()</span></code></a>.</p>
+self.data. This function applies <code class="xref py py-func docutils literal notranslate"><span class="pre">pynanz.indicators.stochastic()</span></code>.</p>
 <p>This functions creates two new colums: f”stochastic_{<cite>period</cite>}” and f”smoothed_stochastic_{<cite>period</cite>}”.
 If the target is not “close”, the target name will be prepended.</p>
 <dl class="field-list simple">
@@ -322,208 +316,19 @@ Default=True.</p></li>
 
 </dd></dl>
 
-</div>
-<div class="section" id="meanvariance-class">
-<h2>MeanVariance (class)<a class="headerlink" href="#meanvariance-class" title="Permalink to this headline"></a></h2>
-<dl class="py class">
-<dt class="sig sig-object py" id="pynanz.MeanVariance">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">pynanz.</span></span><span class="sig-name descname"><span class="pre">MeanVariance</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">alpha</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">0.0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">risk_aversion</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">10.0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">sigma_target</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><span class="pre">float</span><span class="p"><span class="pre">]</span></span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">period</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">5</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">max_weight</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">0.5</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">horizon</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">add_cash</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">True</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/pynanz/MeanVariance.html#MeanVariance"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#pynanz.MeanVariance" title="Permalink to this definition"></a></dt>
-<dd><p>The MeanVariance class performs a Mean-Variance Portfolio Optimization. The optimization follows</p>
-<div class="math notranslate nohighlight">
-\[\max_{\mathbf{w}} \Bigg( \sum_{i=1}^{N} w_i \mathbb{E}[r_i]
-- \lambda \sum_{i=1}^{N}\sum_{j=1}^{N} w_i w_j \Sigma_{ij} \Bigg)\]</div>
-<p>where <span class="math notranslate nohighlight">\(\mathbf{w}\)</span> is the weight vector (portfolio allocation weight), <span class="math notranslate nohighlight">\(\mathbb{E}[r_i]\)</span> the expected
-return for asset <em>i</em>, <span class="math notranslate nohighlight">\(\lambda\)</span> the risk aversion parameter and <span class="math notranslate nohighlight">\(\Sigma_{ij}\)</span> the <em>ij</em>
-element of the covariance matrix (measure of risk). For more details, see the MeanVariance.pdf file.
-<a class="reference external" href="../../../../Notes/Notes.pdf">MeanVariance file</a></p>
-<dl class="py method">
-<dt class="sig sig-object py" id="pynanz.MeanVariance.__init__">
-<span class="sig-name descname"><span class="pre">__init__</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">alpha</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">0.0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">risk_aversion</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">10.0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">sigma_target</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><span class="pre">float</span><span class="p"><span class="pre">]</span></span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">period</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">5</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">max_weight</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">0.5</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">horizon</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">add_cash</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">True</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/pynanz/MeanVariance.html#MeanVariance.__init__"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#pynanz.MeanVariance.__init__" title="Permalink to this definition"></a></dt>
-<dd><p>Constructor for the MeanVariance object. In the constructor, the parameters are set. To effectively solve
-the Mean-Variance Portfolio optimization, you need to call <a class="reference internal" href="#pynanz.MeanVariance.solve" title="pynanz.MeanVariance.solve"><code class="xref py py-func docutils literal notranslate"><span class="pre">pynanz.MeanVariance.solve()</span></code></a>.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
-<dd class="field-odd"><ul class="simple">
-<li><p><strong>alpha</strong> (<em>float</em>) – Decay in the exponential weighting. Set alpha=0.0 for simple averaging. Default=0.0.</p></li>
-<li><p><strong>risk_aversion</strong> (<em>float</em>) – Risk aversion parameter. Cannot be defined if <cite>sigma_target</cite> is not None. Default=10.0.</p></li>
-<li><p><strong>sigma_target</strong> (<em>float</em>) – Annualized standard deviation target. Cannot be defined if <cite>risk_aversion</cite> is not
-None. Solving for sigma_target requires bisection algorithm (more computationally demanding). Default=None</p></li>
-<li><p><strong>period</strong> (<em>int</em>) – Number of data points to consider to compute average and covariance. Default=5.</p></li>
-<li><p><strong>max_weight</strong> (<em>float</em>) – Maximum weighting that an asset can have. Doesn’t apply to the risk-free CASH asset (if
-considered, see <cite>add_cash</cite> parameter). Must be in [0; 1]. Default=0.5.</p></li>
-<li><p><strong>horizon</strong> (<em>int</em>) – Horizon used to compute the return. See <a class="reference internal" href="#pynanz.indicators.past_return" title="pynanz.indicators.past_return"><code class="xref py py-func docutils literal notranslate"><span class="pre">pynanz.indicators.past_return()</span></code></a>. Default=1.</p></li>
-<li><p><strong>add_cash</strong> (<em>bool</em>) – If true, an extra asset named “CASH” is added as a risk-free, zero-return asset.
-Default=True.</p></li>
-</ul>
-</dd>
-</dl>
-</dd></dl>
-
-<dl class="py attribute">
-<dt class="sig sig-object py" id="pynanz.MeanVariance.horizon">
-<span class="sig-name descname"><span class="pre">horizon</span></span><a class="headerlink" href="#pynanz.MeanVariance.horizon" title="Permalink to this definition"></a></dt>
-<dd><p>Horizon attribute</p>
-<dl class="field-list simple">
-<dt class="field-odd">Type</dt>
-<dd class="field-odd"><p>int</p>
-</dd>
-<dt class="field-even">Default</dt>
-<dd class="field-even"><p>lol</p>
-</dd>
-</dl>
-</dd></dl>
-
-<dl class="py method">
-<dt class="sig sig-object py" id="pynanz.MeanVariance.solve">
-<span class="sig-name descname"><span class="pre">solve</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">x</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="#pynanz.Market" title="pynanz.Market.Market"><span class="pre">pynanz.Market.Market</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">mode</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">'global'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">start_date</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><span class="pre">datetime.datetime</span><span class="p"><span class="pre">]</span></span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">end_date</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><span class="pre">datetime.datetime</span><span class="p"><span class="pre">]</span></span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">delta_date</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">1</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/pynanz/MeanVariance.html#MeanVariance.solve"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#pynanz.MeanVariance.solve" title="Permalink to this definition"></a></dt>
-<dd><dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
-<dd class="field-odd"><ul class="simple">
-<li><p><strong>x</strong> – </p></li>
-<li><p><strong>mode</strong> – </p></li>
-<li><p><strong>start_date</strong> – </p></li>
-<li><p><strong>end_date</strong> – </p></li>
-<li><p><strong>delta_date</strong> – </p></li>
-</ul>
-</dd>
-<dt class="field-even">Returns</dt>
-<dd class="field-even"><p></p>
-</dd>
-</dl>
-</dd></dl>
-
-</dd></dl>
-
-</div>
-<div class="section" id="module-pynanz.indicators">
-<span id="indicators-module"></span><h2>indicators (module)<a class="headerlink" href="#module-pynanz.indicators" title="Permalink to this headline"></a></h2>
-<dl class="py function">
-<dt class="sig sig-object py" id="pynanz.indicators.ema">
-<span class="sig-prename descclassname"><span class="pre">pynanz.indicators.</span></span><span class="sig-name descname"><span class="pre">ema</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">x</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">pandas.Series</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">span</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">10</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/pynanz/indicators.html#ema"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#pynanz.indicators.ema" title="Permalink to this definition"></a></dt>
-<dd><p>Compute the exponential moving average (ema) of a pd.Series data.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
-<dd class="field-odd"><ul class="simple">
-<li><p><strong>x</strong> (<em>pd.Series.</em>) – Target data to compute the ema.</p></li>
-<li><p><strong>span</strong> (<em>int.</em>) – Span to compute the data. The decay alpha=2/(span+1).</p></li>
-</ul>
-</dd>
-<dt class="field-even">Returns</dt>
-<dd class="field-even"><p>The ema of x as a pd.Series.</p>
-</dd>
-<dt class="field-odd">Raises</dt>
-<dd class="field-odd"><p>ValueError if span &lt;= 0. TypeError if type(x) != pd.Series.</p>
-</dd>
-</dl>
-</dd></dl>
-
-<dl class="py function">
-<dt class="sig sig-object py" id="pynanz.indicators.future_return">
-<span class="sig-prename descclassname"><span class="pre">pynanz.indicators.</span></span><span class="sig-name descname"><span class="pre">future_return</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">x</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">pandas.Series</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">horizon</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">5</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/pynanz/indicators.html#future_return"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#pynanz.indicators.future_return" title="Permalink to this definition"></a></dt>
-<dd><p>Compute the future return over a fix time <em>horizon</em> of the pd.Series <em>x</em>. The future return <em>y</em> is defined as</p>
-<div class="math notranslate nohighlight">
-\[y[t] = \frac{ x[t+horizon] - x[t]}{x[t]}\]</div>
-<p>If <cite>x</cite> has units of value, then <cite>y</cite> can be interpreted as an investment return.
-In general, <cite>y</cite> measure the change over time horizon <cite>horizon</cite> of the quantity <cite>x</cite>.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
-<dd class="field-odd"><ul class="simple">
-<li><p><strong>x</strong> (<em>pd.Series.</em>) – Target data to compute the future return.</p></li>
-<li><p><strong>horizon</strong> (<em>int.</em>) – Time horizon, a positive integer.</p></li>
-</ul>
-</dd>
-<dt class="field-even">Returns</dt>
-<dd class="field-even"><p>A pd.Series y.</p>
-</dd>
-<dt class="field-odd">Raises</dt>
-<dd class="field-odd"><p>ValueError if horizon &lt;= 0.</p>
-</dd>
-</dl>
-</dd></dl>
-
-<dl class="py function">
-<dt class="sig sig-object py" id="pynanz.indicators.macd">
-<span class="sig-prename descclassname"><span class="pre">pynanz.indicators.</span></span><span class="sig-name descname"><span class="pre">macd</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">x</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">pandas.Series</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">short_span</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">12</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">long_span</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">26</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">signal_span</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">9</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/pynanz/indicators.html#macd"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#pynanz.indicators.macd" title="Permalink to this definition"></a></dt>
-<dd><p>Compute the Moving Average Convergence Divergence (MACD) indicator. The indicator is defined by a fast ema of span
-<cite>short_span</cite> and a slow ema of span <cite>long_span</cite>. The MACD curve is defined by MACD = short_ema - long_ema.
-The signal line is defined as the ema of span <cite>signal_span</cite> of the MACD curve. The MACD histogram is defined as
-the difference between the MACD curve and the signal line. If the histogram has positive value, it suggests a
-bullish market while a negative histogram suggests a bearish market. Take care that the indicator is not perfect
-(false positive/negative) and typically lags in time (detects momentum reversal after they happen).</p>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
-<dd class="field-odd"><ul class="simple">
-<li><p><strong>x</strong> (<em>pd.Series</em>) – Target data to compute the macd.</p></li>
-<li><p><strong>short_span</strong> (<em>int</em>) – Span for the fast EMA curve. Default=12.</p></li>
-<li><p><strong>long_span</strong> (<em>int</em>) – Span for the slow EMA curve. Default=26.</p></li>
-<li><p><strong>signal_span</strong> (<em>int</em>) – Span for the signal line. Default=9.</p></li>
-</ul>
-</dd>
-<dt class="field-even">Returns</dt>
-<dd class="field-even"><p>MACD, signal_line, histogram, a 3D tuple.</p>
-</dd>
-</dl>
-</dd></dl>
-
-<dl class="py function">
-<dt class="sig sig-object py" id="pynanz.indicators.past_return">
-<span class="sig-prename descclassname"><span class="pre">pynanz.indicators.</span></span><span class="sig-name descname"><span class="pre">past_return</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">x</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">pandas.Series</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">horizon</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">5</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/pynanz/indicators.html#past_return"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#pynanz.indicators.past_return" title="Permalink to this definition"></a></dt>
-<dd><p>Compute the past return, that is the realized return, over a fix time <cite>horizon</cite> of the pd.Series <cite>x</cite>.
-The past return <cite>y</cite> is defined as</p>
-<div class="math notranslate nohighlight">
-\[y[t] = \frac{ x[t] - x[t-horizon]}{x[t-horizon]}\]</div>
-<p>If <cite>x</cite> has units of value, then <cite>y</cite> can be interpreted as an investment return.
-In general, <cite>y</cite> measure the change over time horizon <cite>horizon</cite> of the quantity <cite>x</cite>.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
-<dd class="field-odd"><ul class="simple">
-<li><p><strong>x</strong> (<em>pd.Series.</em>) – Target data to compute the future return.</p></li>
-<li><p><strong>horizon</strong> (<em>int.</em>) – Time horizon, a positive integer.</p></li>
-</ul>
-</dd>
-<dt class="field-even">Returns</dt>
-<dd class="field-even"><p>A pd.Series y.</p>
-</dd>
-<dt class="field-odd">Raises</dt>
-<dd class="field-odd"><p>ValueError if horizon &lt;= 0.</p>
-</dd>
-</dl>
-</dd></dl>
-
-<dl class="py function">
-<dt class="sig sig-object py" id="pynanz.indicators.stochastic">
-<span class="sig-prename descclassname"><span class="pre">pynanz.indicators.</span></span><span class="sig-name descname"><span class="pre">stochastic</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">x</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">pandas.Series</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">x_low</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><span class="pre">pandas.Series</span><span class="p"><span class="pre">]</span></span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">x_high</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><span class="pre">pandas.Series</span><span class="p"><span class="pre">]</span></span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">period</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">14</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/pynanz/indicators.html#stochastic"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#pynanz.indicators.stochastic" title="Permalink to this definition"></a></dt>
-<dd><p>Compute the stochastic indicator as well as a smoothed version (ema of span period/3). The stochastic indicator
-is defined as</p>
-<div class="math notranslate nohighlight">
-\[y[t] = 100.0 \frac{x[t] - \min(x_{low}[t-period+1:])}{\max(x_{high}[t-period+1:]) - \min(x_{low}[t-period+1:])}\]</div>
-<p>If you don’t have access to a separate data for the low/high records of your data, the function uses the data
-itself to compute them. For financial data, where high/low values are reached within a trading period, this might
-not be optimal.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
-<dd class="field-odd"><ul class="simple">
-<li><p><strong>x</strong> (<em>pd.Series</em>) – Target data to compute the stochastic indicator.</p></li>
-<li><p><strong>x_low</strong> (<em>pd.Series</em>) – Minimum value of target data to compute the stochastic indicator.</p></li>
-<li><p><strong>x_high</strong> (<em>pd.Series</em>) – Maximum value of target data to compute the stochastic indicator.</p></li>
-<li><p><strong>period</strong> (<em>int</em>) – Period over which the stochastic indicator is computed. Default=14.</p></li>
-</ul>
-</dd>
-<dt class="field-even">Returns</dt>
-<dd class="field-even"><p>A tuple (stochastic, stochastic_smoothed).</p>
-</dd>
-</dl>
-</dd></dl>
-
-<dl class="py function">
-<dt class="sig sig-object py" id="pynanz.indicators.test_func">
-<span class="sig-prename descclassname"><span class="pre">pynanz.indicators.</span></span><span class="sig-name descname"><span class="pre">test_func</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">x</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/pynanz/indicators.html#test_func"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#pynanz.indicators.test_func" title="Permalink to this definition"></a></dt>
-<dd><p>This function will try to calculate:</p>
-<div class="math notranslate nohighlight">
-\[\sum_{i=1}^{\infty} x_{i}\]</div>
-<p>good luck!</p>
-</dd></dl>
-
+<p>#MeanVariance (class)
+#——————–
+#
+#.. autoclass:: pynanz.MeanVariance
+#       :members:
+#       :exclude-members: __weakref__
+#       :special-members:
+#
+#
+#indicators (module)
+#——————–
+#.. automodule:: pynanz.indicators
+#       :members:</p>
 </div>
 </div>
 

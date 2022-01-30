@@ -8,6 +8,8 @@ from .config import Config
 from .cli import main
 """
 
+from .Market import Market
+
 _VERSION = 0
 _MAJOR_RELEASE = 0
 _MINOR_RELEASE = 0

@@ -2,29 +2,31 @@ import numpy as np
 import datetime
 import pandas as pd
 import yfinance as yf
-from typing import Union
+from typing import Union, List
 from . import indicators
 import pickle
 import copy
+from contextlib import redirect_stdout
+import io
 
 
 class Market:
     """
     `Market` is a class for downloading, storing and handling market data. Data is downloaded from yahoofinance by
-    using `yfinance <https://github.com/ranaroussi/yfinance>`_ as backend. The type of data that is downloaded is
+    using `yfinance <https://github.com/ranaroussi/yfinance>`_ as backend. Two types of data are downloaded
 
     * Daily *Open, High, Low, Close, Volume (OHLCV)* of diverse financial assets (e.g. stocks, ETFs, ...) that is
-    stored in the attribute `self.data` of type pd.DataFrame.
+      stored in the attribute `self.data` of type pd.DataFrame.
     * Metadata associated to the asset (e.g. sector type) that is stored in the attribute `self.metadata` of type
-    pd.DataFrame.
+      pd.DataFrame.
+
 
     For `self.data`, the columns are multi-indexed, i.e. each column label is a tuple of len=2 whose first entry is the
     ticker symbol (e.g. "AAPL", "GOOG") and second the attribute (e.g. "open", "high"). Diverse financial indicators
-    such as exponentially moving averages (EMA) or moving average convergence divergence (MACD)
-    can also be computed.
-
+    such as exponentially moving averages (EMA) or moving average convergence divergence (MACD) can also be computed.
 
     **Note that:**
+
 
     * Only daily data can be retrieved.
     * Ticker symbols are fully capitalized, e.g. "AAPL" (not "aapl").
@@ -49,8 +51,8 @@ class Market:
         # pd.DataFrame containing the data.
         self.data = None
 
-        # List of tickers, e.g. ["AAPL", "GOOG", "USFD", "ARKF"]. Access via property
-        self.tickers = None
+        # List of tickers, e.g. ["AAPL", "GOOG", "USFD", "ARKF"].
+        self._tickers = None
 
         # pd.Dataframe containing metadata related to equities
         self.equity = None
@@ -58,25 +60,24 @@ class Market:
         # pd.Dataframe containing metadata related to ETFs
         self.etf = None
 
+    ##################
+    ### Properties ###
+    ##################
+
     @property
     def tickers(self):
         return self._tickers
 
     @tickers.setter
     def tickers(self, tickers):
-        # Default None initialization
-        if tickers is None:
-            self._tickers = None
-            return
-
-        # Safe instantiation
+        # Safe instantiation with type checking
         if isinstance(tickers, str):
-            x = [tickers]
-        if not (isinstance(tickers, list) or isinstance(tickers, np.ndarray)):
-            raise TypeError("tickers must be of type str of list[str], not", type(tickers))
+            tickers = [tickers]
+        elif isinstance(tickers, list) or isinstance(tickers, np.ndarray):
+            if not all([isinstance(i, str) for i in tickers]):
+                raise TypeError("tickers must be a list/np.ndarray of str")
         else:
-            if not isinstance(tickers[0], str):
-                raise TypeError("tickers must be of type str of list[str], not", type(tickers))
+            raise TypeError("tickers must be of type str, list[str] or np.ndarray[str], not", type(tickers))
 
         self._tickers = np.array(tickers)
 
@@ -92,27 +93,23 @@ class Market:
         raise PermissionError("self.attributes is read-only.")
 
     def download(self,
-                 tickers: Union[list, str],
-                 start_date: Union[datetime.date, pd.Timestamp] = None,
-                 end_date: Union[datetime.date, pd.Timestamp] = None,
-                 tolerance: int = 15,
-                 clean_nan_index: bool = True):
+                 tickers: Union[str, List[str]],
+                 start: Union[str, pd.Timestamp] = None,
+                 end: Union[str, pd.Timestamp] = None,
+                 threshold_date: Union[str, pd.Timestamp] = None,
+                 remove_nan: bool = True):
         """
-        Download data from yahoo finance using `yahooquery <https://yahooquery.dpguthrie.com>`_ as backend.
+        Download data from yahoo finance using `yfinance <https://github.com/ranaroussi/yfinance>`_ as backend.
 
-        :param list[str],str tickers: List of str or str that contains the ticker symbols of the considered assets, e.g.
-            ["AAPL", "GOOG", "USFD", "ARKF"]. No default.
-        :param datetime.date start_date: Starting date to consider the data. If unspecified, the API will try to fetch
-            starting from the oldest available date. Default = None.
-        :param datetime.date end_date: End date (inclusive) for the date to be considered. If unspecified, it is set
-            to today (`datetime.date.today()`). Default = None.
-        :param int tolerance: If `start_date` is specified, and `tolerance >= 0`, then any asset whose oldest available
-            data is newer than than `start_date` up to `tolerance` days is discarded. This option is useful when one
-            needs to consider data that exist for long-time enough in their model. Setting `tolerance` a negative value
-            deactivate this feature. Default = 15.
-        :param bool clean_nan_index: If true, indices (rows) of self.data which contains NaN values are cleaned. This
-            can be useful since American and European trading days are not always the same, because of varying holidays.
-            Default is True (recommended).
+        :param str,List[str] tickers: List of str or str that contains the ticker symbols of the
+            considered assets, e.g. ["AAPL", "GOOG", "USFD", "ARKF"]. No default.
+        :param str,pd.Timestamp start: Start date for fetching the data. If None, the API will fetch data as far in
+            the past as it can. Default = None.
+        :param str,pd.Timestamp end: End date for fetching the data. If unspecified, it is set to today via
+            `pd.Timestamp.ceil(pd.Timestamp.today(), "D")`. Default = None.
+        :param str,pd.Timestamp threshold_date: If defined, assets that have the first record of historical data that
+            is newer than `threshold_date` are ignored.
+        :param bool remove_nan: If True, dates with NaN entries are removed. Default is True.
         """
         # Set the tickers list
         self.tickers = tickers
@@ -120,109 +117,74 @@ class Market:
         # Reset the pd.DataFrame to None
         self.data = None
 
-        # Yahooquery only considers datetime objects
-        if isinstance(start_date, pd.Timestamp):
-            start_date = datetime.date(year=start_date.year, month=start_date.month, day=start_date.day)
-        if isinstance(end_date, pd.Timestamp):
-            end_date = datetime.date(year=end_date.year, month=end_date.month, day=end_date.day)
+        if start is not None:
+            start = pd.Timestamp(start)
 
-        too_new = []  # Hold the ticker symbols of assets which are too recent (if applicable)
-        not_found = []  # Hold the ticker symbols of assets which are not found (if applicable)
+        if end is None:
+            end = pd.Timestamp.ceil(pd.Timestamp.today(), "D")
+        else:
+            end = pd.Timestamp(end)
+
+        ###########################
+        ### Download OHLCV data ###
+        ###########################
+        data = []
         for ticker in self.tickers:
-            t = Ticker(ticker)
-            if start_date is not None:
-                if end_date is None:
-                    end_date = datetime.date.today()
-                df = t.history(start=start_date, end=end_date, interval="1d")
-                day_diff = df.index.values[0][1] - start_date
-                if day_diff.days > tolerance > 0:
-                    too_new.append(ticker)
+            f = io.StringIO()
+            with redirect_stdout(f):
+                df = yf.download(tickers=ticker, start=start, end=end, interval="1d")
+            if isinstance(df, pd.DataFrame):
+                if len(df) == 0:
+                    print("Skipping %s, lack of data" % ticker)
                     continue
-            else:
-                df = ticker.history(period="max", interval="1d")
-            if not isinstance(df, pd.DataFrame):
-                not_found.append([ticker, df])
-                continue
+                if "Dividends" in df.columns:
+                    df.drop(columns=["Dividends"], inplace=True)
+                if "Stock Splits" in df.columns:
+                    df.drop(columns=["Stock Splits"], inplace=True)
+                if threshold_date is not None:
+                    if df.index[0] > pd.Timestamp(threshold_date):
+                        print("Skipping %s starting at" % ticker, df.index[0])
+                        continue
 
-            index = pd.MultiIndex.from_product([[ticker], df.columns.values])
-            df.columns = index
-            df.reset_index(level=0, drop=True, inplace=True)
-            if self.data is None:
-                self.data = df.copy()
-            else:
-                self.data = pd.concat([self.data, df], axis=1)
+                new_cols = pd.MultiIndex.from_tuples([(ticker, c.lower()) for c in df.columns])
+                df.columns = new_cols
+                data.append(df)
 
-        # Output some messages to the user.
-        if too_new:
-            print("Some stocks were too new to be considered:", end=" ")
-            for x in too_new:
-                print(x, end=", ")
-            print()
-        if not_found:
-            print("Some stocks where not found:", end=" ")
-            for x in not_found:
-                print(x[0], end=", ")
-            print()
-
-        # Clean-up the pd.DataFrame
-        self.data.sort_index(axis=0, inplace=True)
-        if start_date is not None:
-            self.data = self.data[self.data.index >= start_date].copy()
-        if clean_nan_index:
+        self.data = pd.concat(data, axis=1)
+        if remove_nan:
             self.data.dropna(axis=0, inplace=True)
 
-        # Only keep "Open, High, Low, Close, Volume" (OHLCV)
-        drop_columns = [x for x in self.data.columns if x[1] not in ["open", "high", "low", "close", "volume"]]
-        self.data.drop(columns=drop_columns, inplace=True)
-        self.data.sort_index(axis=1, inplace=True)
+        self.tickers = self.data.columns.get_level_values(level=0).unique().to_numpy()
 
-        # Transform the datetime index into pd.Timestamp
-        self.data.index = self.data.index.map(pd.Timestamp)
+        # Download metadata
+        #self._fetch_metadata()
 
-        # Fetch tickers
-        self.tickers = np.unique([x for x, y in self.data.columns])
-
-        # Fetch metadata
-        self._fetch_metadata()
-
-    def _fetch_metadata(self):
-        t = Ticker(list(self.tickers))
-
-        self.equity = []
-        self.etf = []
-
-        # Split between EQUITY and ETF
-        quote_types = t.quote_type
+    def dowload_metadata(self):
+        self.equity = pd.DataFrame()
+        self.etf = pd.DataFrame()
         for ticker in self.tickers:
-            if quote_types[ticker]["quoteType"].lower() == "equity":
-                self.equity.append(ticker)
-            elif quote_types[ticker]["quoteType"].lower() == "etf":
-                self.etf.append(ticker)
-            else:
-                raise ValueError(f"{ticker} is neither equity nor etf.")
+            x = yf.Ticker(ticker)
+            info = x.get_info()
+            if info["quoteType"].lower() == "equity":
+                d = {'sector': info['sector'].lower(),
+                     'ticker': ticker}
+                self.equity = self.equity.append(d, ignore_index=True)
+            elif info["quoteType"].lower() == "etf":
+                d = {"ticker": ticker}
+                for i in info["sectorWeightings"]:
+                    for k, v in i.items():
+                        d[k] = v
+                self.etf = self.etf.append(d, ignore_index=True)
 
-        self.equity = pd.DataFrame(index=self.equity)
-        self.etf = pd.DataFrame(index=self.etf)
+        if len(self.equity) == 0:
+            self.equity = None
+        else:
+            self.equity.set_index("ticker", drop=True, inplace=True)
 
-        # Get the sector/industry for equities
-        t = Ticker(list(self.equity.index))
-        tmp = t.summary_profile
-        self.equity["industry"] = [tmp[x]["industry"].lower() for x in self.equity.index]
-        self.equity["sector"] = [tmp[x]["sector"].lower() for x in self.equity.index]
-
-        # Get the sector/industry for equities
-        t = Ticker(list(self.etf.index))
-        tmp = t.fund_sector_weightings
-
-        for ticker in self.etf.index:
-            if len(self.etf.columns) == 0:
-                self.etf[tmp[ticker].index] = 0.0
-            self.etf.loc[ticker] = tmp[ticker]
-
-        # rename columns
-        rename = dict([(x, x.replace("_", " ")) for x in self.etf.columns])
-        rename["realestate"] = "real estate"
-        self.etf.rename(columns=rename, inplace=True)
+        if len(self.etf) == 0:
+            self.etf = None
+        else:
+            self.etf.set_index("ticker", drop=True, inplace=True)
 
     def row(self, loc: pd.Timestamp, target: str = None, drop_level: bool = True):
         if target:

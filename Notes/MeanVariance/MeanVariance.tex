@@ -1,0 +1,270 @@
+\documentclass[a4paper,12pt]{report}
+\usepackage[utf8]{inputenc}
+\usepackage[top=2.5cm, bottom=2.5cm, left=2.5cm, right=2.5cm]{geometry}
+\usepackage[T1]{fontenc}
+\usepackage{lmodern}
+\usepackage{amsmath}
+\usepackage{hyperref}
+\usepackage{verbatim}
+%\usepackage{SIunits}
+\usepackage{amssymb}
+\usepackage{amsmath}
+\usepackage[toc,page]{appendix}
+\usepackage[version=3]{mhchem}
+\usepackage{chemfig}
+\usepackage{subcaption}
+\usepackage{verbatim}
+\usepackage{numprint}
+\usepackage{calc}
+\usepackage{fancyhdr}
+\usepackage{relsize}
+\usepackage{booktabs,caption,fixltx2e}
+\usepackage[flushleft]{threeparttable}
+\usepackage{graphicx}
+\usepackage{titlesec}
+\titleformat{\section}[block]
+  {\fontsize{12}{15}\bfseries}
+  {\thesection}
+  {1em}
+  {}
+\titleformat{\subsection}[block]
+  {\fontsize{11}{14}\bfseries}
+  {\thesubsection}
+  {1em}
+  {}
+\usepackage[export]{adjustbox}
+\titleformat{\chapter}[display]
+{\centering\normalfont\huge\bfseries}
+{\chaptertitlename\ \thechapter}
+{15pt}
+{\Huge}
+\usepackage{array,multirow,makecell}
+\setcellgapes{1pt}
+\makegapedcells
+\newcolumntype{R}[1]{>{\raggedleft\arraybackslash }b{#1}}
+\newcolumntype{L}[1]{>{\raggedright\arraybackslash }b{#1}}
+\newcolumntype{C}[1]{>{\centering\arraybackslash }b{#1}} 
+\newenvironment{dedication}
+  {\clearpage           % we want a new page
+   \thispagestyle{empty}% no header and footer
+   \vspace*{\stretch{1}}% some space at the top 
+   \itshape             % the text is in italics
+   \raggedright          % flush to the right margin
+  }
+  {\par % end the paragraph
+   \vspace{\stretch{3}} % space at bottom is three times that at the top
+   \clearpage           % finish off the page
+  }
+  
+\newtheorem{prop}{Proposition}
+\newtheorem{assumption}{Assumption}
+
+
+\begin{document}
+\begin{titlepage}
+
+\newcommand{\HRule}{\rule{\linewidth}{0.5mm}} % Defines a new command for the horizontal lines, change thickness here
+
+\center % Center everything on the page
+
+
+%----------------------------------------------------------------------------------------
+%	HEADING SECTIONS
+%----------------------------------------------------------------------------------------
+
+
+\vspace{7cm}
+\mbox{}\\[7cm]
+
+
+%----------------------------------------------------------------------------------------
+%	TITLE SECTION
+%----------------------------------------------------------------------------------------
+
+\HRule \\[0.4cm]
+{ \huge \bfseries Pynanz: Mean-Variance \\[0.5cm] \small Notes}\\[0.4cm] % Title of your document
+\HRule \\[1.5cm]
+ 
+%----------------------------------------------------------------------------------------
+%	AUTHOR SECTION
+%----------------------------------------------------------------------------------------
+
+
+% If you don't want a supervisor, uncomment the two lines below and remove the section above
+\Large \emph{Author:}\\
+Leandro \textsc{Salemi}\\
+\href{mailto:salemileandro@gmail.com}{salemileandro@gmail.com}\\[2cm] % Your name
+
+%----------------------------------------------------------------------------------------
+%	DATE SECTION
+%----------------------------------------------------------------------------------------
+
+{\large \today}\\[4cm] % Date, change the \today to a set date if you want to be precise
+
+
+
+%----------------------------------------------------------------------------------------
+%	LOGO SECTION
+%----------------------------------------------------------------------------------------
+
+%\includegraphics{Logo}\\[1cm] % Include a department/university logo - this will require the graphicx package
+ 
+%----------------------------------------------------------------------------------------
+
+\vfill % Fill the rest of the page with whitespace
+
+\end{titlepage}
+%\begin{abstract} 
+%ABSTRACT
+%\end{abstract}
+%\newpage
+
+%\tableofcontents
+%\thispagestyle{empty}
+%\newpage
+%\setcounter{page}{1}
+
+
+\chapter{Modern Portfolio Theory}
+In 1952, Harry Markowitz, in his \emph{Portfolio Selection} paper, laid the foundations of what would become modern portfolio theory (MPT)\footnote{H. Markowitz, \emph{Portfolio Selection}, The Journal of Finance 7, no. 1, pp. 77-91, 1952, doi:10.2307/2975974}. Markowitz actually won the Nobel Prize in Economics laters in 1990 for this. The central question which the MPT tries to answer is portfolio optimization: 
+\begin{center}
+\emph{What is the optimal capital allocation for a given set of assets under risk constraints ?}
+\end{center}
+\mbox{}\\
+
+
+We consider a set of $N$ assets. The return vector $\mathbf{r} = (r^1, r^2, ..., r^N)^T$ is a random vector where the asset specific return $r_i$ is a scalar random variable. The return vector $\mathbf{r}$ is a random vector because future are unknown and the market is somehow not fully deterministic. We consider forward-looking expectation value, that is the expectation value of the return in the future.
+
+The portfolio allocation is parametrized by a weight vector $\mathbf{w} = (w_1, w_2, ..., w_N)^T$ where
+\begin{equation}
+0 \leq w_i \leq 1, \hspace{1cm}\sum_{i=1}^N w_i = 1.
+\end{equation}
+Combining $\mathbf{r}$ and $\mathbf{w}$, we can define the portfolio return $r^P$, which is also a random variable, and can be expressed as
+\begin{equation}
+r^P = \mathbf{w} \cdot \mathbf{r}^T  = \sum_{i=1}^N w^i r^i.
+\end{equation}
+The expected portfolio return, $\mathbb{E}\big[r^P\big]$ can be written as
+\begin{equation}
+\mathbb{E}\big[r^P\big] = \mathbf{w} \cdot \mathbb{E}\big[\mathbf{r}^T\big] = \sum_{i=1}^N w^i ~ \mathbb{E}\big[r^i\big].
+\end{equation}
+
+\newpage
+Let us assume that there exists a function $\sigma^2 = \sigma^2(\mathbf{w}, \mathbf{r})$ which quantifies the risk. The MPT optimization problem reads
+\begin{equation}
+\label{eq:MPT_Theory}
+\begin{aligned}
+\max_{\mathbf{w}} \quad & \mathbb{E}\big[r^P\big] = \max_{\mathbf{w}} \sum_{i=1}^N w^i ~ \mathbb{E}\big[r^i\big]\\
+\textrm{s.t.} \quad & \sigma^2(\mathbf{w}, \mathbf{r}) \leq \sigma_0^2\\
+  & w_i \geq 0    \\
+\end{aligned}
+\end{equation}
+where $\sigma_0^2$ is a chosen maximum risk tolerance.\\
+
+
+Eq.~\ref{eq:MPT_Theory} embodies the core of MPT and its exact solution is without any doubt the dream of any investor. Although beautiful in its simplicity, this formulation of MPT has two major pitfalls:
+\begin{itemize}
+\item The expectation values of the assets return $\mathbb{E}\big[r^i\big]$ are unknown and therefore $\mathbb{E}\big[r^P\big]$ is unknown.
+\item The risk function $\sigma^2(\mathbf{w}, \mathbf{r})$ is unknown. Actually, the mathematical formulation of the risk is in itself a daunting question. Defining a clear measure of the risk is not straightforward.
+\end{itemize}
+
+Those two points are actually quite critical. In simple words, they tell us that although we know the formal optimization equation (Eq.~\ref{eq:MPT_Theory}), we do not have access to any of its defining parameters. In the next section, we will establish a practical framework for solving Eq.~\ref{eq:MPT_Theory}.
+
+\section{Solving the Portfolio Optimization Equation}
+To solve the optimization problem of Eq.~\ref{eq:MPT_Theory}, we will make use of historical data. If the price of asset $i$ at time step $t$ is $P_t^i$, its return at time $t$ is
+\begin{equation}
+r_t^i = \frac{P_t^i - P_{t-1}^i}{P_{t-1}^i} = \frac{P_t^i }{P_{t-1}^i} - 1
+\end{equation}
+
+
+\begin{assumption}
+At time step $t$, the expectation value $\mathbb{E}\big[r^i\big]$ can be approximated by
+$$ \mathbb{E}\big[r^i\big] \approx \mu^i_{t,T} =  \sum_{k=t-T}^{t} \beta_k  r^i_{k}, \hspace{1cm} \sum_{k=t-T}^{t} \beta_k =1 $$
+where $\mu^i_{t,T}$ is the expectation value estimator of asset $i$ return at time $t$ over time horizon $T \geq 0$ and $\beta_j$ a weighting factor.
+\end{assumption}
+Note that the time horizon is related to the number of time steps considered $N_t$ ($N_t = T+1$). The choice of the weighting factors $\beta_k$ is somehow arbitrary. We can nevertheless discuss two interesting cases:
+\begin{itemize}
+\item The weighting factors $\beta_j$ are set to 
+$$ \beta_k = \frac{1}{T+1}, \hspace{1cm} \forall j.$$
+The expectation value evaluation reduces to a simple average.
+\item The weighting factors $\beta_j$ are set to
+$$ \beta_k = \frac{\exp[-\alpha (t-k)]}{\sum_{q=t-T}^{t}  \exp[-\alpha  (t-q) ]}, \hspace{1cm} \alpha \geq 0.$$
+The expectation value evaluation reduced to an exponentially weighted average. With the constraint $\alpha \geq 0$, the exponentially weighted average tends to put more importance on are more recent data.
+\end{itemize}
+Note that the simple average can be defined as an exponentially weighted average with $\alpha=0$.\\
+
+
+\begin{assumption}
+The risk function $\sigma^2(\mathbf{w}, \mathbf{r})$ can be computed as
+\begin{equation}
+\sigma^2(\mathbf{w}, \mathbf{r}) = \sum_{ij} w_i \Sigma_{ij} w_j = \mathbf{w}^T \boldsymbol{\Sigma}~\mathbf{w}
+\end{equation}
+where $\boldsymbol{\Sigma}$ is the covariance matrix whose elements are computed using
+\begin{equation}
+\begin{split}
+\Sigma_{ij} &= \mathbb{E}\Big[ \big(r^i - \mathbb{E}[r^i]\big) \big(r^j - \mathbb{E}[r^j]\big)\Big]\\
+& \approx \tilde{\Sigma}^{ij}_{t,T} =  \sum_{k=t-T}^{t} \beta_k  \big( r^i_{k} - \mu^i_{t,T} \big) \big( r^j_{k} - \mu^j_{t,T} \big).
+\end{split}
+\end{equation}
+where $\tilde{\boldsymbol{\Sigma}}_{t,T}$ is the estimator of $\boldsymbol{\Sigma}$, which is evaluated as in Assumption 1.
+\end{assumption}
+
+With such assumptions, the portfolio optimization problem is highly non-stationary, i.e. the expected returns and risk value evolve through time. Therefore, the weight allocation vector $\mathbf{w}$ is time-dependent, i.e. $\mathbf{w}_t$. It is important to undestand that the optimization problem now depends on some hyper-parameters: (1) the time granularity chosen for the time steps $t$, (2) the time horizon $T$ and (3) the exponential decay factor $\alpha$ (assuming an exponentially weighted averaging). The optimization problem reads
+\begin{center}
+\fbox{
+\addtolength{\linewidth}{-2\fboxsep}%
+\addtolength{\linewidth}{-2\fboxrule}%
+\begin{minipage}{\linewidth}
+\begin{equation}
+\begin{aligned}
+\max_{\mathbf{w}} \quad &  \sum_{i=1}^N w^i_t \mu^i_{t,T}\\
+\textrm{s.t.} \quad &\sum_{i=1}^{N}\sum_{j=1}^{N} w^i_t~ \tilde{\Sigma}^{ij}_{t,T}~ w^j_t \leq \sigma^2_0 \\
+  & w^i_t \geq 0, \hspace{0.3cm} \sum_{i=1}^{N} w^i_t = 1    \\
+\end{aligned}
+\end{equation}
+where
+$$
+\mu^i_{t,T} = \sum_{k=t-T}^{t} \beta_k  r^i_{k}, \hspace{1cm}
+\tilde{\Sigma}^{ij}_{t,T} = \sum_{k=t-T}^{t} \beta_k  \big( r^i_{k} - \mu^i_{t,T} \big) \big( r^j_{k} - \mu^j_{t,T} \big)\\
+$$
+\end{minipage}
+}
+\end{center}
+The above formulation of the optimization problem is exact within our assumptions. It might be necessary to rewrite the equation in a slightly different way. We define a risk aversion parameter $\lambda$ such that the optimization problem becomes
+\begin{center}
+\fbox{
+\addtolength{\linewidth}{-2\fboxsep}%
+\addtolength{\linewidth}{-2\fboxrule}%
+\begin{minipage}{\linewidth}
+\begin{equation}
+\begin{aligned}
+\max_{\mathbf{w}} \quad &  \sum_{i=1}^N w^i_t \mu^i_{t,T} - \lambda \sum_{i=1}^{N}\sum_{j=1}^{N} w^i_t~ \tilde{\Sigma}^{ij}_{t,T}~ w^j_t\\
+\textrm{s.t.} \quad &w^i_t \geq 0, \hspace{0.3cm} \sum_{i=1}^{N} w^i_t = 1  \\
+\end{aligned}
+\end{equation}
+where
+$$
+\mu^i_{t,T} = \sum_{k=t-T}^{t} \beta_k  r^i_{k}, \hspace{0.8cm}
+\tilde{\Sigma}^{ij}_{t,T} = \sum_{k=t-T}^{t} \beta_k  \big( r^i_{k} - \mu^i_{t,T} \big) \big( r^j_{k} - \mu^j_{t,T} \big)
+$$
+$$
+\tiny
+\beta_k = \frac{\exp\big[-\alpha  (t-k)\big]}{\sum_{q=t-T}^{t}  \exp\big[-\alpha  (t-q)\big]}, \hspace{0.2cm} \alpha \geq 0
+$$
+\end{minipage}
+}
+\end{center}
+
+The risk aversion parameter $\lambda$ is a Lagrange multiplier, allowing for efficient resolution techniques. For instance, one could cite the python library \texttt{cvxpy} which can solve this kind of constrained quadratic programming problem\footnote{\url{https://www.cvxpy.org/examples/basic/quadratic_program.html}}. There are two limiting cases for $\lambda$.
+\begin{itemize}
+\item $\lambda \rightarrow \infty$: The problem reduces to a minimum-variance portfolio,
+$$\min_{\mathbf{w}} \sum_{i=1}^{N}\sum_{j=1}^{N} w_i \tilde{\Sigma}_{ij} w_j,$$
+which will allocate all the weights on the asset which has the lowest variance, without considering the expected return.
+\item $\lambda \rightarrow 0$: The problem reduces to a maximum-return portfolio,
+$$\max_{\mathbf{w}}\sum_{i=1}^N w^i_t \mu^i_{t,T},$$
+which will allocate all the weights on the asset which has the highest expected return, without considering the risk. 
+\end{itemize} 
+
+We can now understand why $\lambda$ is often referred to as the risk aversion parameter since the larger $\lambda$ is, the higher the penalty associated to risk kicks in in our optimization. It is worth mentioning that by fixing the risk aversion parameter $\lambda$, the risk level \mbox{$\sigma^P = \sqrt{\sum_{i,j} w^i_t~\tilde{\Sigma}^{ij}_{t,T}~w^j_t}$} will vary through time. To solve for a fixed $\sigma^P$, one could use a bisection algorithm on the parameter $\lambda$ at each time step.
+
+\end{document}
+

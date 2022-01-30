@@ -67,7 +67,7 @@
 <span></span><span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
 <span class="kn">import</span> <span class="nn">datetime</span>
 <span class="kn">import</span> <span class="nn">pandas</span> <span class="k">as</span> <span class="nn">pd</span>
-<span class="kn">from</span> <span class="nn">yahooquery</span> <span class="kn">import</span> <span class="n">Ticker</span>
+<span class="kn">import</span> <span class="nn">yfinance</span> <span class="k">as</span> <span class="nn">yf</span>
 <span class="kn">from</span> <span class="nn">typing</span> <span class="kn">import</span> <span class="n">Union</span>
 <span class="kn">from</span> <span class="nn">.</span> <span class="kn">import</span> <span class="n">indicators</span>
 <span class="kn">import</span> <span class="nn">pickle</span>
@@ -76,25 +76,21 @@
 
 <div class="viewcode-block" id="Market"><a class="viewcode-back" href="../../sources.html#pynanz.Market">[docs]</a><span class="k">class</span> <span class="nc">Market</span><span class="p">:</span>
     <span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">    Market is a class to store and handle market data. The main purpose of a Market object is to store the</span>
-<span class="sd">    *Open, High, Low, Close, Volume (OHLCV)* daily data of financial assets, i.e. stocks, ETFs, ...</span>
-<span class="sd">    The data is stored in the attribute `self.data`, which is a pandas.DataFrame.</span>
+<span class="sd">    `Market` is a class for downloading, storing and handling market data. Data is downloaded from yahoofinance by</span>
+<span class="sd">    using `yfinance &lt;https://github.com/ranaroussi/yfinance&gt;`_ as backend. Two types of data are downloaded</span>
 
-<span class="sd">    Retrieval of market data can be done via the member function :func:`pynanz.Market.download`, which downloads</span>
-<span class="sd">    data from yahoofinance by using `yahooquery &lt;https://yahooquery.dpguthrie.com&gt;`_ as backend. Already retrieved</span>
-<span class="sd">    data can be saved (see :func:`pynanz.Market.save`) and loaded later (see :func:`pynanz.Market.load`).</span>
+<span class="sd">    * Daily *Open, High, Low, Close, Volume (OHLCV)* of diverse financial assets (e.g. stocks, ETFs, ...) that is</span>
+<span class="sd">      stored in the attribute `self.data` of type pd.DataFrame.</span>
+<span class="sd">    * Metadata associated to the asset (e.g. sector type) that is stored in the attribute `self.metadata` of type</span>
+<span class="sd">      pd.DataFrame.</span>
 
-<span class="sd">    The index of `self.data` are `datetime.data` objects corresponding to the trading days (trading days are</span>
-<span class="sd">    not necessarily contiguous!).</span>
-<span class="sd">    The columns are multi-indexed: each column label is a tuple of len=2 whose first entry is the ticker symbol</span>
-<span class="sd">    (e.g. &quot;AAPL&quot;, &quot;GOOG&quot;) and second the attribute (e.g. &quot;open&quot;, &quot;high&quot;).</span>
-<span class="sd">    For instance, self.data[(&quot;AAPL&quot;, &quot;close&quot;)] is a pd.Series (1D object) which contains the closing price</span>
-<span class="sd">    for Apple stock.</span>
 
-<span class="sd">    Financial indicators such as exponentially moving averages (EMA) or moving average convergence divergence (MACD)</span>
-<span class="sd">    can also be computed. Such indicators can be used to build investment strategies (see Strategy class).</span>
+<span class="sd">    For `self.data`, the columns are multi-indexed, i.e. each column label is a tuple of len=2 whose first entry is the</span>
+<span class="sd">    ticker symbol (e.g. &quot;AAPL&quot;, &quot;GOOG&quot;) and second the attribute (e.g. &quot;open&quot;, &quot;high&quot;). Diverse financial indicators</span>
+<span class="sd">    such as exponentially moving averages (EMA) or moving average convergence divergence (MACD) can also be computed.</span>
 
 <span class="sd">    **Note that:**</span>
+
 
 <span class="sd">    * Only daily data can be retrieved.</span>
 <span class="sd">    * Ticker symbols are fully capitalized, e.g. &quot;AAPL&quot; (not &quot;aapl&quot;).</span>
