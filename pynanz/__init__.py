@@ -9,6 +9,8 @@ from .cli import main
 """
 
 from .Market import Market
+from . import indicators
+from .MeanVariance import MeanVariance
 
 _VERSION = 0
 _MAJOR_RELEASE = 0

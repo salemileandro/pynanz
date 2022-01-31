@@ -7,10 +7,8 @@ def ema(x: pd.Series,
     """
     Compute the exponential moving average (ema) of a pd.Series data.
 
-    :param  x: Target data to compute the ema.
-    :type   x: pd.Series.
-    :param  span: Span to compute the data. The decay alpha=2/(span+1).
-    :type   span: int.
+    :param  pd.Series x: Target data to compute the ema.
+    :param  int span: Span to compute the data. The decay alpha=2/(span+1).
     :return: The ema of x as a pd.Series.
     :raises: ValueError if span <= 0. TypeError if type(x) != pd.Series.
     """
@@ -52,7 +50,7 @@ def future_return(x: pd.Series, horizon: int = 5):
     return y
 
 
-def past_return(x: pd.Series, horizon: int = 5):
+def past_return(x: pd.Series, horizon: int = 1):
     """
     Compute the past return, that is the realized return, over a fix time `horizon` of the pd.Series `x`.
     The past return `y` is defined as

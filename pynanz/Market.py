@@ -118,7 +118,7 @@ class Market:
         self.data = None
 
         if start is not None:
-            start = pd.Timestamp(start)
+            _start = pd.Timestamp(start) - pd.Timedelta(days=7)
 
         if end is None:
             end = pd.Timestamp.ceil(pd.Timestamp.today(), "D")
@@ -132,7 +132,7 @@ class Market:
         for ticker in self.tickers:
             f = io.StringIO()
             with redirect_stdout(f):
-                df = yf.download(tickers=ticker, start=start, end=end, interval="1d")
+                df = yf.download(tickers=ticker, start=_start, end=end, interval="1d")
             if isinstance(df, pd.DataFrame):
                 if len(df) == 0:
                     print("Skipping %s, lack of data" % ticker)
@@ -154,12 +154,20 @@ class Market:
         if remove_nan:
             self.data.dropna(axis=0, inplace=True)
 
+        if start is not None:
+            self.data = self.data[self.data.index > start]
+
         self.tickers = self.data.columns.get_level_values(level=0).unique().to_numpy()
 
-        # Download metadata
-        #self._fetch_metadata()
+    def download_metadata(self):
+        """
+        Download the metadata associated to the tickers stored is self.tickers. If self.tickers is None, the call will
+        fail.
+        (this functionality is still in development)
+        """
+        if self.tickers is None:
+            raise AttributeError("self.ticker is None, you should call self.download() or self.load() first.")
 
-    def dowload_metadata(self):
         self.equity = pd.DataFrame()
         self.etf = pd.DataFrame()
         for ticker in self.tickers:
@@ -192,8 +200,8 @@ class Market:
         else:
             return self.data.loc[loc]
 
-    @staticmethod
-    def load(filename):
+    @classmethod
+    def load(cls, filename):
         """
         Load data from a pickle file. Need :func:`pynanz.StockData.save` to be called in a previous run.
 
@@ -455,27 +463,13 @@ class Market:
 
         return bool(date in self.data.index.values)
 
-    def backtester(self,
-                        start_date: pd.Timestamp = None,
-                        end_date: pd.Timestamp = None,
-                        history: int = None):
-        # Default values
-        if start_date is None:
-            start_date = self.oldest_date()
-        if end_date is None:
-            end_date = self.newest_date()
+    def get_price_history(self, attribute: str = "close", add_cash: bool = True):
+        if self.data is None:
+            raise ValueError("self.data has to be initialized first.")
 
-        # Initialize the date
-        date = start_date
+        df = self.data.xs(attribute, level=1, axis=1).copy()
 
-        while date < end_date:
-            if self.is_trading_day(date):
-                # Fetch history if needed
-                history_data = None
-                if history:
-                    idx = self.data.index.get_loc(date)
-                    history_data = self.data.iloc[idx-history+1:idx+1].copy()
-                yield date, self.row(date).unstack(level=1), history_data
-            # Increment the date
-            date += pd.Timedelta(days=1)
+        if add_cash:
+            df["CASH"] = 1.0
 
+        return df
