@@ -26,7 +26,7 @@ print("CURRENT DIR=",os.getcwd())
 
 # -- General configuration ---------------------------------------------------
 
-autodoc_mock_imports = ['pandas', 'yahooquery', 'cvxpy', 'numpy']
+autodoc_mock_imports = ['pandas', 'yfinance', 'cvxpy', 'numpy']
 
 
 # Add any Sphinx extension module names here, as strings. They can be
