@@ -1,11 +1,12 @@
-.. Pynanz documentation master file, created by
-   sphinx-quickstart on Sat Feb 20 14:14:47 2021.
-   You can adapt this file completely to your liking, but it should at least
-   contain the root `toctree` directive.
-
 Welcome to Pynanz's documentation!
 ==================================
-Some explanatory words
+Welcome :)
+
+Pynanz is a python library related to finance. At the moment, it can download daily market data, analyze it using indicators (e.g. MACD, Stochastic) and perform a mean-variance analysis (Markowitz optimization).
+
+The project is ongoing !
+
+For inquiries, you can contact me at salemileandro@gmail.com.
 
 Documentation
 =============
