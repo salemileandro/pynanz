@@ -123,7 +123,7 @@
         <span class="bp">self</span><span class="o">.</span><span class="n">_risk_aversion</span> <span class="o">=</span> <span class="n">risk_aversion</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_sigma_target</span> <span class="o">=</span> <span class="n">sigma_target</span>
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_risk_aversion</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">and</span> <span class="bp">self</span><span class="o">.</span><span class="n">_sigma_target</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
-            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;risk_aversion and sigma_target cannot be both defined.&quot;</span><span class="p">)</span>
+            <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;risk_aversion and sigma_target are both defined, sigma_target takes precedence&quot;</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_period</span> <span class="o">=</span> <span class="n">period</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_max_weight</span> <span class="o">=</span> <span class="n">max_weight</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_horizon</span> <span class="o">=</span> <span class="n">horizon</span>
@@ -138,7 +138,6 @@
 
         <span class="c1"># Save tickers, put integer index for easy slicing</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">tickers</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">data</span><span class="o">.</span><span class="n">columns</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">data</span><span class="o">.</span><span class="n">reset_index</span><span class="p">(</span><span class="n">drop</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">inplace</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
 
         <span class="c1"># Portfolio optimization DataFrame placeholder</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">portfolio</span> <span class="o">=</span> <span class="kc">None</span>
@@ -189,17 +188,18 @@
         <span class="n">p_risk</span> <span class="o">=</span> <span class="n">cp</span><span class="o">.</span><span class="n">quad_form</span><span class="p">(</span><span class="n">w</span><span class="p">,</span> <span class="n">sigma</span><span class="p">)</span>     <span class="c1"># Expected portfolio risk (squared) &quot;w^T . Sigma . w&quot;</span>
 
         <span class="c1"># Optimization problem (quadratic programming)</span>
-        <span class="n">prob</span> <span class="o">=</span> <span class="n">cp</span><span class="o">.</span><span class="n">Maximize</span><span class="p">(</span><span class="n">p_return</span> <span class="o">-</span> <span class="n">gamma</span> <span class="o">*</span> <span class="n">p_risk</span><span class="p">)</span>
-        <span class="n">prob</span> <span class="o">=</span> <span class="n">cp</span><span class="o">.</span><span class="n">Problem</span><span class="p">(</span><span class="n">prob</span><span class="p">,</span> <span class="p">[</span><span class="n">cp</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">w</span><span class="p">)</span> <span class="o">==</span> <span class="mi">1</span><span class="p">,</span> <span class="n">w</span> <span class="o">&gt;=</span> <span class="mi">0</span><span class="p">,</span> <span class="n">w</span> <span class="o">&lt;=</span> <span class="n">max_weight</span><span class="p">])</span>
+        <span class="n">prob</span> <span class="o">=</span> <span class="n">cp</span><span class="o">.</span><span class="n">Problem</span><span class="p">(</span><span class="n">cp</span><span class="o">.</span><span class="n">Maximize</span><span class="p">(</span><span class="n">p_return</span> <span class="o">-</span> <span class="n">gamma</span> <span class="o">*</span> <span class="n">p_risk</span><span class="p">),</span> <span class="p">[</span><span class="n">cp</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">w</span><span class="p">)</span> <span class="o">==</span> <span class="mi">1</span><span class="p">,</span> <span class="n">w</span> <span class="o">&gt;=</span> <span class="mi">0</span><span class="p">,</span> <span class="n">w</span> <span class="o">&lt;=</span> <span class="n">max_weight</span><span class="p">])</span>
         <span class="n">prob</span><span class="o">.</span><span class="n">solve</span><span class="p">()</span>
 
-        <span class="k">return</span> <span class="n">w</span><span class="o">.</span><span class="n">value</span><span class="p">,</span> <span class="n">p_return</span><span class="o">.</span><span class="n">value</span><span class="p">,</span> <span class="n">p_risk</span><span class="o">.</span><span class="n">value</span></div>
+        <span class="k">return</span> <span class="n">w</span><span class="o">.</span><span class="n">value</span><span class="p">,</span> <span class="n">p_return</span><span class="o">.</span><span class="n">value</span><span class="p">,</span> <span class="n">p_risk</span><span class="o">.</span><span class="n">value</span><span class="p">,</span> <span class="n">gamma</span></div>
 
 <div class="viewcode-block" id="MeanVariance.bisection_solver"><a class="viewcode-back" href="../../sources.html#pynanz.MeanVariance.bisection_solver">[docs]</a>    <span class="nd">@staticmethod</span>
     <span class="k">def</span> <span class="nf">bisection_solver</span><span class="p">(</span><span class="n">mu</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span>
                          <span class="n">sigma</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span>
                          <span class="n">risk_target</span><span class="p">:</span> <span class="nb">float</span><span class="p">,</span>
-                         <span class="n">max_weight</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span> <span class="o">=</span> <span class="kc">None</span><span class="p">):</span>
+                         <span class="n">max_weight</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+                         <span class="n">max_iter</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">200</span><span class="p">,</span>
+                         <span class="n">rel_tol</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">0.001</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Solve the same quadratic problem as :func:`pynanz.MeanVariance.solver` but targeting a specific value for</span>
 <span class="sd">        the risk :math:`\\sigma_p` using a bisection algorithm. The risk :math:`\\sigma_p` is defined as</span>
@@ -207,220 +207,131 @@
 <span class="sd">        .. math::</span>
 <span class="sd">            \\sigma_p = \\Bigg( \\sum_{i=1}^{N}\\sum_{j=1}^{N} w_i w_j \\Sigma_{ij} \\Bigg)^{1/2}</span>
 
+<span class="sd">        Take care to the rescaling of :math:`\\sigma_p` depending on the frequency at which it was computed !</span>
+
 <span class="sd">        :param np.ndarray mu: Array of expected returns of shape (n_assets,) where n_assets is the number</span>
 <span class="sd">            of assets considered</span>
 <span class="sd">        :param np.ndarray sigma: Covariance matrix of shape (n_assets, n_assets).</span>
 <span class="sd">        :param float risk_target: Risk target parameter.</span>
 <span class="sd">        :param np.ndarray max_weight: Array of shape (n_assets,) whose i :sup:`th` entry is the maximum allocation for</span>
 <span class="sd">            asset i. Default is None (internally handled as np.ones(shape=n_assets))</span>
+<span class="sd">        :param int max_iter: Maximum number of iteration for the bisection algorithm. Default is 200.</span>
+<span class="sd">        :param float rel_tol: Relative tolerance for the risk target . Default is 0.05.</span>
 <span class="sd">        :return: weights (np.ndarray), portfolio_return (float), portfolio_risk_squared (float) (similarly</span>
 <span class="sd">            to :func:`pynanz.MeanVariance.solver`).</span>
 <span class="sd">        &quot;&quot;&quot;</span>
-        <span class="k">pass</span></div>
 
+        <span class="c1"># Target is the square of the risk_target parameter</span>
+        <span class="n">target</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">square</span><span class="p">(</span><span class="n">risk_target</span><span class="p">)</span>
 
+        <span class="c1"># Set the initial value</span>
+        <span class="n">gamma_left</span> <span class="o">=</span> <span class="mf">1e4</span>           <span class="c1"># High value = LOW risk (left side of a risk vs return graph)</span>
+        <span class="n">gamma_right</span> <span class="o">=</span> <span class="mf">0.0</span>          <span class="c1"># Low value = HIGH risk (right side of a risk vs return graph)</span>
 
-    <span class="k">def</span> <span class="nf">_compute_mean_cov</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">index</span><span class="p">:</span> <span class="nb">int</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">        Inplace computation of the mean vector and covariance matrix (self.mean and self.cov), from `index` to</span>
-<span class="sd">        `index` + `self.period` used for Markowitz optimization. The weighting vector `self.beta` is used to</span>
-<span class="sd">        weight the time data.</span>
+        <span class="n">solution_left</span> <span class="o">=</span> <span class="n">MeanVariance</span><span class="o">.</span><span class="n">solver</span><span class="p">(</span><span class="n">mu</span><span class="p">,</span> <span class="n">sigma</span><span class="p">,</span> <span class="n">gamma_left</span><span class="p">,</span> <span class="n">max_weight</span><span class="p">)</span>
+        <span class="n">solution_right</span> <span class="o">=</span> <span class="n">MeanVariance</span><span class="o">.</span><span class="n">solver</span><span class="p">(</span><span class="n">mu</span><span class="p">,</span> <span class="n">sigma</span><span class="p">,</span> <span class="n">gamma_right</span><span class="p">,</span> <span class="n">max_weight</span><span class="p">)</span>
 
-<span class="sd">        :param  index: Starting index.</span>
-<span class="sd">        :type   index: int</span>
-<span class="sd">        &quot;&quot;&quot;</span>
-        <span class="n">data</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">historical_data</span><span class="o">.</span><span class="n">iloc</span><span class="p">[</span><span class="n">index</span><span class="p">:</span> <span class="n">index</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">period</span><span class="p">]</span><span class="o">.</span><span class="n">to_numpy</span><span class="p">()</span><span class="o">.</span><span class="n">transpose</span><span class="p">()</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">mean</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">average</span><span class="p">(</span><span class="n">data</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">weights</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">beta</span><span class="p">)</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">cov</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">cov</span><span class="p">(</span><span class="n">data</span><span class="p">,</span> <span class="n">aweights</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">beta</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">target</span> <span class="o">&gt;=</span> <span class="n">solution_right</span><span class="p">[</span><span class="mi">2</span><span class="p">]:</span>
+            <span class="k">return</span> <span class="n">solution_right</span>
 
+        <span class="k">if</span> <span class="n">target</span> <span class="o">&lt;=</span> <span class="n">solution_left</span><span class="p">[</span><span class="mi">2</span><span class="p">]:</span>
+            <span class="k">return</span> <span class="n">solution_left</span>
 
-<div class="viewcode-block" id="MeanVariance.solve"><a class="viewcode-back" href="../../sources.html#pynanz.MeanVariance.solve">[docs]</a>    <span class="k">def</span> <span class="nf">solve</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span>
-              <span class="n">x</span><span class="p">:</span> <span class="n">Market</span><span class="p">,</span>
-              <span class="n">mode</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;global&quot;</span><span class="p">,</span>
-              <span class="n">start_date</span><span class="p">:</span> <span class="n">pd</span><span class="o">.</span><span class="n">Timestamp</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
-              <span class="n">end_date</span><span class="p">:</span> <span class="n">pd</span><span class="o">.</span><span class="n">Timestamp</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
-              <span class="n">delta_date</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">1</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;</span>
+        <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">max_iter</span><span class="p">):</span>
+            <span class="k">if</span> <span class="n">i</span> <span class="o">==</span> <span class="n">max_iter</span> <span class="o">-</span> <span class="mi">1</span><span class="p">:</span>
+                <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;MAX REACHED&quot;</span><span class="p">)</span>
+            <span class="n">gamma_center</span> <span class="o">=</span> <span class="mf">0.5</span> <span class="o">*</span> <span class="p">(</span><span class="n">gamma_right</span> <span class="o">+</span> <span class="n">gamma_left</span><span class="p">)</span>
+            <span class="n">solution_center</span> <span class="o">=</span> <span class="n">MeanVariance</span><span class="o">.</span><span class="n">solver</span><span class="p">(</span><span class="n">mu</span><span class="p">,</span> <span class="n">sigma</span><span class="p">,</span> <span class="n">gamma_center</span><span class="p">,</span> <span class="n">max_weight</span><span class="p">)</span>
 
-<span class="sd">        :param x:</span>
-<span class="sd">        :param mode:</span>
-<span class="sd">        :param start_date:</span>
-<span class="sd">        :param end_date:</span>
-<span class="sd">        :param delta_date:</span>
-<span class="sd">        :return:</span>
-<span class="sd">        &quot;&quot;&quot;</span>
-
-        <span class="c1"># Case insensitive</span>
-        <span class="n">mode</span> <span class="o">=</span> <span class="n">mode</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span>
-
-        <span class="c1"># Check if `mode` is allowed</span>
-        <span class="n">allowed_mode</span> <span class="o">=</span> <span class="p">[</span><span class="s2">&quot;global&quot;</span><span class="p">,</span> <span class="s2">&quot;single shot&quot;</span><span class="p">,</span> <span class="s2">&quot;efficient frontier&quot;</span><span class="p">]</span>
-        <span class="k">if</span> <span class="n">mode</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">allowed_mode</span><span class="p">:</span>
-            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;mode not allowed, must be in&quot;</span><span class="p">,</span> <span class="n">allowed_mode</span><span class="p">)</span>
-
-        <span class="c1"># Check if start_date is correctly defined if &quot;single shot&quot; or &quot;efficient frontier&quot; mode are activated</span>
-        <span class="k">if</span> <span class="n">mode</span> <span class="o">==</span> <span class="s2">&quot;single shot&quot;</span> <span class="ow">or</span> <span class="n">mode</span> <span class="o">==</span> <span class="s2">&quot;efficient frontier&quot;</span><span class="p">:</span>
-            <span class="k">if</span> <span class="n">start_date</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
-                <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;If mode is </span><span class="se">\&quot;</span><span class="s2">single shot</span><span class="se">\&quot;</span><span class="s2"> or </span><span class="se">\&quot;</span><span class="s2">efficient frontier</span><span class="se">\&quot;</span><span class="s2">, start_date must be set.&quot;</span><span class="p">)</span>
-
-        <span class="c1"># Extract the historical data</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">_extract_historical_data</span><span class="p">(</span><span class="n">x</span><span class="p">)</span>
-
-        <span class="c1"># Assign start_date and end_date if necessary</span>
-        <span class="k">if</span> <span class="n">start_date</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
-            <span class="n">start_date</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">historical_data</span><span class="o">.</span><span class="n">index</span><span class="o">.</span><span class="n">values</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">period</span><span class="p">]</span>
-        <span class="k">if</span> <span class="n">end_date</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
-            <span class="n">end_date</span> <span class="o">=</span> <span class="n">datetime</span><span class="o">.</span><span class="n">date</span><span class="o">.</span><span class="n">today</span><span class="p">()</span>
-
-
-        <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">period</span><span class="p">,</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">historical_data</span><span class="p">),</span> <span class="n">delta_date</span><span class="p">):</span>
-            <span class="c1"># If we are not yet at start_date, just skip the current iteration</span>
-            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">historical_data</span><span class="o">.</span><span class="n">index</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">&lt;</span> <span class="n">start_date</span><span class="p">:</span>
-                <span class="k">continue</span>
-
-            <span class="c1"># If we are over end_date, break out of the loop</span>
-            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">historical_data</span><span class="o">.</span><span class="n">index</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">&gt;</span> <span class="n">end_date</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">np</span><span class="o">.</span><span class="n">abs</span><span class="p">((</span><span class="n">target</span> <span class="o">-</span> <span class="n">solution_center</span><span class="p">[</span><span class="mi">2</span><span class="p">]))</span> <span class="o">&lt;</span> <span class="n">rel_tol</span> <span class="o">*</span> <span class="n">target</span><span class="p">:</span>
                 <span class="k">break</span>
-
-
-
-
-
-
-
-
-
-
-        <span class="k">if</span> <span class="n">mode</span> <span class="o">==</span> <span class="s2">&quot;single shot&quot;</span><span class="p">:</span>
-            <span class="k">if</span> <span class="ow">not</span> <span class="n">x</span><span class="o">.</span><span class="n">is_trading_day</span><span class="p">(</span><span class="n">start_date</span><span class="p">):</span>
-                <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;start_date is not a trading day.&quot;</span><span class="p">)</span>
-
-
-
-
-
-
-        <span class="bp">self</span><span class="o">.</span><span class="n">summary</span> <span class="o">=</span> <span class="p">{}</span>
-        <span class="n">index_list</span> <span class="o">=</span> <span class="p">[]</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">capital</span> <span class="o">=</span> <span class="p">[</span><span class="mf">1e4</span><span class="p">]</span>
-
-        <span class="n">date_list</span> <span class="o">=</span> <span class="p">[]</span>
-        <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">portfolio</span><span class="p">)):</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">_compute_mean_cov</span><span class="p">(</span><span class="n">i</span><span class="p">)</span>
-            <span class="n">date_list</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">portfolio</span><span class="o">.</span><span class="n">index</span><span class="o">.</span><span class="n">values</span><span class="p">[</span><span class="n">i</span><span class="p">])</span>
-
-            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">sigma_target</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
-                <span class="n">summary</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_one_shot_solver</span><span class="p">()</span>
             <span class="k">else</span><span class="p">:</span>
-                <span class="n">summary</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_bisection_solver</span><span class="p">()</span>
-            <span class="k">for</span> <span class="n">k</span> <span class="ow">in</span> <span class="n">summary</span><span class="p">:</span>
-                <span class="k">if</span> <span class="ow">not</span><span class="p">(</span><span class="n">k</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">summary</span><span class="p">):</span>
-                    <span class="bp">self</span><span class="o">.</span><span class="n">summary</span><span class="p">[</span><span class="n">k</span><span class="p">]</span> <span class="o">=</span> <span class="p">[]</span>
-                <span class="bp">self</span><span class="o">.</span><span class="n">summary</span><span class="p">[</span><span class="n">k</span><span class="p">]</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">summary</span><span class="p">[</span><span class="n">k</span><span class="p">])</span>
-
-        <span class="bp">self</span><span class="o">.</span><span class="n">summary</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">summary</span><span class="p">,</span> <span class="n">index</span><span class="o">=</span><span class="n">date_list</span><span class="p">)</span>
-        <span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">        self.capital = [1e4]</span>
-<span class="sd">        for i in range(1, len(self.summary)):</span>
-<span class="sd">            w = self.summary.iloc[i-1][self.stock_list].to_numpy().flatten()</span>
-
-<span class="sd">            date = self.summary.index[i]</span>
-<span class="sd">            #r_vec = stock.data.loc[date][[(&quot;Adj Close Return&quot;, v) for v in self.stock_list]].to_numpy().flatten()</span>
-
-<span class="sd">            #r = np.dot(w, r_vec)</span>
-
-<span class="sd">            #self.capital.append(self.capital[-1] * (1.0 + r))</span>
-
-<span class="sd">        self.summary[&quot;capital&quot;] = self.capital&quot;&quot;&quot;</span></div>
-
-    <span class="k">def</span> <span class="nf">_extract_historical_data</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">x</span><span class="p">:</span> <span class="n">Market</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">        Extract historical data from a pynanz.StockData object. The extracted data is stored into the attribute</span>
-<span class="sd">        `self.historical_data` which is a pd.DataFrame having the same indexing as x.data where each column has</span>
-<span class="sd">        an asset ticker as label and contain the past return over horizon `self.horizon`. If the attribute</span>
-<span class="sd">        `self.add_cash` is set to True, then the risk-less asset &quot;CASH&quot; (return = 0 for every datapoint) is added.</span>
-
-<span class="sd">        :param Market x: StockData object containing the target data.</span>
-<span class="sd">        &quot;&quot;&quot;</span>
-        <span class="c1"># Create an empty pd.DataFrame</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">historical_data</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">(</span><span class="n">index</span><span class="o">=</span><span class="n">x</span><span class="o">.</span><span class="n">data</span><span class="o">.</span><span class="n">index</span><span class="p">)</span>
-
-        <span class="c1"># Loop over assets</span>
-        <span class="k">for</span> <span class="n">stock</span> <span class="ow">in</span> <span class="n">x</span><span class="o">.</span><span class="n">stock_list</span><span class="p">:</span>
-            <span class="c1"># The returns could be with a larger horizon than 1. See indicators.past_return for more info.</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">historical_data</span><span class="p">[</span><span class="n">stock</span><span class="p">]</span> <span class="o">=</span> <span class="n">indicators</span><span class="o">.</span><span class="n">past_return</span><span class="p">(</span><span class="n">x</span><span class="o">.</span><span class="n">data</span><span class="p">[(</span><span class="n">stock</span><span class="p">,</span> <span class="s2">&quot;close&quot;</span><span class="p">)],</span> <span class="bp">self</span><span class="o">.</span><span class="n">horizon</span><span class="p">)</span>
-
-        <span class="c1"># Add risk-less asset CASH if self.add_cash is True.</span>
-        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">add_cash</span><span class="p">:</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">historical_data</span><span class="p">[</span><span class="s2">&quot;CASH&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="n">shape</span><span class="o">=</span><span class="nb">len</span><span class="p">(</span><span class="n">x</span><span class="o">.</span><span class="n">data</span><span class="p">))</span>
-        <span class="c1"># Clean-up and sort the historical data</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">historical_data</span><span class="o">.</span><span class="n">dropna</span><span class="p">(</span><span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">inplace</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
-        <span class="c1"># Sort the columns</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">historical_data</span><span class="o">.</span><span class="n">sort_index</span><span class="p">(</span><span class="n">axis</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">inplace</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
-        <span class="c1"># Fetch the stock list</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">stock_list</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">historical_data</span><span class="o">.</span><span class="n">columns</span><span class="o">.</span><span class="n">values</span>
-
-
-    <span class="k">def</span> <span class="nf">_bisection_solver</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-            <span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">            @brief Bisection method to find a sigma_year target.</span>
-<span class="sd">            &quot;&quot;&quot;</span>
-
-            <span class="bp">self</span><span class="o">.</span><span class="n">risk_aversion</span> <span class="o">=</span> <span class="mf">1e2</span>
-            <span class="n">r_left</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_one_shot_solver</span><span class="p">()</span>
-            <span class="k">while</span> <span class="n">r_left</span><span class="p">[</span><span class="s2">&quot;sigma_year&quot;</span><span class="p">]</span> <span class="o">&gt;=</span> <span class="bp">self</span><span class="o">.</span><span class="n">sigma_target</span><span class="p">:</span>
-                <span class="bp">self</span><span class="o">.</span><span class="n">risk_aversion</span> <span class="o">*=</span> <span class="mi">10</span>
-                <span class="n">r_left</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_one_shot_solver</span><span class="p">()</span>
-                <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">risk_aversion</span> <span class="o">&gt;=</span> <span class="mf">1e10</span><span class="p">:</span>
-                    <span class="k">return</span> <span class="n">r_left</span>
-
-            <span class="bp">self</span><span class="o">.</span><span class="n">risk_aversion</span> <span class="o">=</span> <span class="mf">0.0</span>
-            <span class="n">r_right</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_one_shot_solver</span><span class="p">()</span>
-            <span class="k">if</span> <span class="n">r_right</span><span class="p">[</span><span class="s2">&quot;sigma_year&quot;</span><span class="p">]</span> <span class="o">&lt;=</span> <span class="bp">self</span><span class="o">.</span><span class="n">sigma_target</span><span class="p">:</span>
-                <span class="k">return</span> <span class="n">r_right</span>
-
-            <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">100</span><span class="p">):</span>
-                <span class="bp">self</span><span class="o">.</span><span class="n">risk_aversion</span> <span class="o">=</span> <span class="mf">0.5</span> <span class="o">*</span> <span class="p">(</span><span class="n">r_left</span><span class="p">[</span><span class="s2">&quot;risk_aversion&quot;</span><span class="p">]</span> <span class="o">+</span> <span class="n">r_right</span><span class="p">[</span><span class="s2">&quot;risk_aversion&quot;</span><span class="p">])</span>
-                <span class="n">r_center</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_one_shot_solver</span><span class="p">()</span>
-
-                <span class="k">if</span> <span class="n">r_center</span><span class="p">[</span><span class="s2">&quot;sigma_year&quot;</span><span class="p">]</span> <span class="o">&gt;=</span> <span class="bp">self</span><span class="o">.</span><span class="n">sigma_target</span><span class="p">:</span>
-                    <span class="n">r_right</span> <span class="o">=</span> <span class="n">r_center</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
+                <span class="k">if</span> <span class="n">target</span> <span class="o">&lt;</span> <span class="n">solution_center</span><span class="p">[</span><span class="mi">2</span><span class="p">]:</span>
+                    <span class="n">gamma_right</span> <span class="o">=</span> <span class="n">gamma_center</span>
                 <span class="k">else</span><span class="p">:</span>
-                    <span class="n">r_left</span> <span class="o">=</span> <span class="n">r_center</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
+                    <span class="n">gamma_left</span> <span class="o">=</span> <span class="n">gamma_center</span>
 
-                <span class="k">if</span> <span class="n">np</span><span class="o">.</span><span class="n">abs</span><span class="p">(</span><span class="n">r_left</span><span class="p">[</span><span class="s2">&quot;risk_aversion&quot;</span><span class="p">]</span> <span class="o">-</span> <span class="n">r_right</span><span class="p">[</span><span class="s2">&quot;risk_aversion&quot;</span><span class="p">])</span> <span class="o">&lt;</span> <span class="mf">1e-4</span><span class="p">:</span>
-                    <span class="k">break</span>
+        <span class="k">return</span> <span class="n">solution_center</span></div>
 
-            <span class="k">return</span> <span class="n">r_center</span>
+    <span class="k">def</span> <span class="nf">_compute_mu_sigma</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">data</span><span class="p">:</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">):</span>
 
+        <span class="n">returns</span> <span class="o">=</span> <span class="n">data</span><span class="o">.</span><span class="n">values</span><span class="o">.</span><span class="n">T</span>
 
-    <span class="k">def</span> <span class="nf">_one_shot_solver</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-        <span class="c1"># Fetch the number of stocks</span>
-        <span class="n">n_stocks</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">stock_list</span><span class="p">))</span>
+        <span class="n">exp_ret</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">average</span><span class="p">(</span><span class="n">returns</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">weights</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_beta</span><span class="p">)</span>
+        <span class="n">cov_mat</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">cov</span><span class="p">(</span><span class="n">returns</span><span class="p">,</span> <span class="n">aweights</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_beta</span><span class="p">)</span>
 
-        <span class="c1"># Create a vector of upper-boundary constraint.</span>
-        <span class="n">max_weight</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">ones</span><span class="p">(</span><span class="n">shape</span><span class="o">=</span><span class="n">n_stocks</span><span class="p">)</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">max_weight</span>
-        <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">n_stocks</span><span class="p">):</span>
-            <span class="c1"># CASH is unconstrained, useful for risky period where bailing-out might be good (crisis)</span>
-            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">stock_list</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">==</span> <span class="s2">&quot;CASH&quot;</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">exp_ret</span><span class="p">,</span> <span class="n">cov_mat</span>
+
+<div class="viewcode-block" id="MeanVariance.optimize"><a class="viewcode-back" href="../../sources.html#pynanz.MeanVariance.optimize">[docs]</a>    <span class="k">def</span> <span class="nf">optimize</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span>
+                 <span class="n">start</span><span class="p">:</span> <span class="n">pd</span><span class="o">.</span><span class="n">Timestamp</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+                 <span class="n">end</span><span class="p">:</span> <span class="n">pd</span><span class="o">.</span><span class="n">Timestamp</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+                 <span class="n">frequency</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">1</span><span class="p">,</span>
+                 <span class="n">n_workers</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="kc">None</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Solve the Mean-Variance optimization problem from `start` to `end` at frequency `frequency`</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="k">if</span> <span class="n">start</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">start</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">data</span><span class="o">.</span><span class="n">index</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">start</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">Timestamp</span><span class="p">(</span><span class="n">start</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="n">end</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">end</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">data</span><span class="o">.</span><span class="n">index</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">end</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">Timestamp</span><span class="p">(</span><span class="n">end</span><span class="p">)</span>
+
+        <span class="c1"># Compute the max weight vector, with no constraint on CASH holding (100% pullout possibility)</span>
+        <span class="n">max_weight</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">ones</span><span class="p">(</span><span class="n">shape</span><span class="o">=</span><span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">tickers</span><span class="p">))</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">_max_weight</span>
+        <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">tickers</span><span class="p">)):</span>
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">tickers</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">==</span> <span class="s2">&quot;CASH&quot;</span><span class="p">:</span>
                 <span class="n">max_weight</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">=</span> <span class="mf">1.0</span>
 
-        <span class="n">w</span> <span class="o">=</span> <span class="n">cp</span><span class="o">.</span><span class="n">Variable</span><span class="p">(</span><span class="n">n_stocks</span><span class="p">)</span>
-        <span class="n">ret</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">mean</span><span class="o">.</span><span class="n">T</span> <span class="o">@</span> <span class="n">w</span>
-        <span class="n">risk</span> <span class="o">=</span> <span class="n">cp</span><span class="o">.</span><span class="n">quad_form</span><span class="p">(</span><span class="n">w</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">cov</span><span class="p">)</span>
-        <span class="n">prob</span> <span class="o">=</span> <span class="n">cp</span><span class="o">.</span><span class="n">Problem</span><span class="p">(</span><span class="n">cp</span><span class="o">.</span><span class="n">Maximize</span><span class="p">(</span><span class="n">ret</span> <span class="o">-</span> <span class="bp">self</span><span class="o">.</span><span class="n">risk_aversion</span> <span class="o">*</span> <span class="n">risk</span><span class="p">),</span> <span class="p">[</span><span class="n">cp</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">w</span><span class="p">)</span> <span class="o">==</span> <span class="mi">1</span><span class="p">,</span> <span class="n">w</span> <span class="o">&gt;=</span> <span class="mi">0</span><span class="p">,</span> <span class="n">w</span> <span class="o">&lt;=</span> <span class="n">max_weight</span><span class="p">])</span>
-        <span class="n">prob</span><span class="o">.</span><span class="n">solve</span><span class="p">()</span>
+        <span class="n">param</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_risk_aversion</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_sigma_target</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="c1"># sigma_horizon = sigma_year * sqrt(horizon / 252), necessary rescaling for the bisection algorithm</span>
+            <span class="n">param</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_sigma_target</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_horizon</span> <span class="o">/</span> <span class="mi">252</span><span class="p">)</span>
 
-        <span class="n">summary</span> <span class="o">=</span> <span class="p">{</span><span class="s2">&quot;risk_aversion&quot;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">risk_aversion</span><span class="p">,</span>
-                   <span class="s2">&quot;sigma_day&quot;</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="n">risk</span><span class="o">.</span><span class="n">value</span><span class="p">),</span>
-                   <span class="s2">&quot;sigma_year&quot;</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="n">risk</span><span class="o">.</span><span class="n">value</span><span class="p">)</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="mf">256.0</span> <span class="o">/</span> <span class="bp">self</span><span class="o">.</span><span class="n">horizon</span><span class="p">),</span>
-                   <span class="s2">&quot;return_day&quot;</span><span class="p">:</span> <span class="n">ret</span><span class="o">.</span><span class="n">value</span><span class="p">,</span>
-                   <span class="s2">&quot;return_year&quot;</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">power</span><span class="p">(</span><span class="mf">1.0</span> <span class="o">+</span> <span class="n">ret</span><span class="o">.</span><span class="n">value</span><span class="p">,</span> <span class="mf">256.0</span> <span class="o">/</span> <span class="bp">self</span><span class="o">.</span><span class="n">horizon</span><span class="p">)</span> <span class="o">-</span> <span class="mf">1.0</span><span class="p">}</span>
+        <span class="n">_index</span> <span class="o">=</span> <span class="p">[]</span>
 
-        <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">stock_list</span><span class="p">)):</span>
-            <span class="n">summary</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">stock_list</span><span class="p">[</span><span class="n">i</span><span class="p">]]</span> <span class="o">=</span> <span class="n">w</span><span class="o">.</span><span class="n">value</span><span class="p">[</span><span class="n">i</span><span class="p">]</span>
+        <span class="k">def</span> <span class="nf">_generator</span><span class="p">(</span><span class="n">data</span><span class="p">):</span>
+            <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">df</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">data</span><span class="o">.</span><span class="n">rolling</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_period</span><span class="p">)):</span>
+                <span class="k">if</span> <span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">df</span><span class="p">)</span> <span class="o">&lt;</span> <span class="bp">self</span><span class="o">.</span><span class="n">_period</span><span class="p">)</span> <span class="ow">or</span> <span class="p">(</span><span class="n">i</span> <span class="o">%</span> <span class="n">frequency</span> <span class="o">!=</span> <span class="mi">0</span><span class="p">)</span> <span class="ow">and</span> <span class="n">df</span><span class="o">.</span><span class="n">index</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span> <span class="o">&lt;</span> <span class="n">start</span><span class="p">:</span>
+                    <span class="k">continue</span>
+                <span class="k">elif</span> <span class="n">df</span><span class="o">.</span><span class="n">index</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span> <span class="o">&gt;</span> <span class="n">end</span><span class="p">:</span>
+                    <span class="k">break</span>
+                <span class="k">else</span><span class="p">:</span>
+                    <span class="n">exp_ret</span><span class="p">,</span> <span class="n">cov_mat</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_compute_mu_sigma</span><span class="p">(</span><span class="n">df</span><span class="p">)</span>
+                    <span class="n">_index</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">df</span><span class="o">.</span><span class="n">index</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">])</span>
+                    <span class="k">yield</span> <span class="n">exp_ret</span><span class="p">,</span> <span class="n">cov_mat</span><span class="p">,</span> <span class="n">param</span><span class="p">,</span> <span class="n">max_weight</span>
 
-        <span class="k">return</span> <span class="n">summary</span></div>
+        <span class="k">with</span> <span class="n">Pool</span><span class="p">(</span><span class="n">processes</span><span class="o">=</span><span class="n">n_workers</span><span class="p">)</span> <span class="k">as</span> <span class="n">p</span><span class="p">:</span>
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_sigma_target</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+                <span class="n">result</span> <span class="o">=</span> <span class="n">p</span><span class="o">.</span><span class="n">starmap</span><span class="p">(</span><span class="n">MeanVariance</span><span class="o">.</span><span class="n">bisection_solver</span><span class="p">,</span> <span class="n">_generator</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">data</span><span class="p">))</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">result</span> <span class="o">=</span> <span class="n">p</span><span class="o">.</span><span class="n">starmap</span><span class="p">(</span><span class="n">MeanVariance</span><span class="o">.</span><span class="n">solver</span><span class="p">,</span> <span class="n">_generator</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">data</span><span class="p">))</span>
+
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">portfolio</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">(</span><span class="n">index</span><span class="o">=</span><span class="n">_index</span><span class="p">)</span>
+        <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">tickers</span><span class="p">)):</span>
+            <span class="n">ticker</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">tickers</span><span class="p">[</span><span class="n">i</span><span class="p">]</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">portfolio</span><span class="p">[</span><span class="n">ticker</span><span class="p">]</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="n">x</span><span class="p">[</span><span class="mi">0</span><span class="p">][</span><span class="n">i</span><span class="p">]</span> <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="n">result</span><span class="p">])</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">portfolio</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">tickers</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">portfolio</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">tickers</span><span class="p">]</span><span class="o">.</span><span class="n">clip</span><span class="p">(</span><span class="n">lower</span><span class="o">=</span><span class="mf">0.0</span><span class="p">,</span> <span class="n">upper</span><span class="o">=</span><span class="mf">1.0</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">portfolio</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">tickers</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">portfolio</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">tickers</span><span class="p">]</span><span class="o">.</span><span class="n">round</span><span class="p">(</span><span class="mi">3</span><span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">portfolio</span><span class="p">[</span><span class="s2">&quot;yearly_return&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="n">x</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="n">result</span><span class="p">])</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">portfolio</span><span class="p">[</span><span class="s2">&quot;yearly_risk&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="n">x</span><span class="p">[</span><span class="mi">2</span><span class="p">]</span> <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="n">result</span><span class="p">])</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">portfolio</span><span class="p">[</span><span class="s2">&quot;risk_aversion&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="n">x</span><span class="p">[</span><span class="mi">3</span><span class="p">]</span> <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="n">result</span><span class="p">])</span>
+
+        <span class="c1"># Rescale the return to obtain the yearly one</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">portfolio</span><span class="p">[</span><span class="s2">&quot;yearly_return&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">power</span><span class="p">(</span><span class="mf">1.0</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">portfolio</span><span class="p">[</span><span class="s2">&quot;yearly_return&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">values</span><span class="p">,</span> <span class="mf">252.0</span> <span class="o">/</span> <span class="bp">self</span><span class="o">.</span><span class="n">_horizon</span><span class="p">)</span>
+
+        <span class="c1"># Rescale the risk to obtain the yearly one</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">portfolio</span><span class="p">[</span><span class="s2">&quot;yearly_risk&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">portfolio</span><span class="p">[</span><span class="s2">&quot;yearly_risk&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">values</span><span class="p">)</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="mf">252.0</span> <span class="o">/</span> <span class="bp">self</span><span class="o">.</span><span class="n">_horizon</span><span class="p">)</span></div></div>
+
+
+
 </pre></div>
 
            </div>

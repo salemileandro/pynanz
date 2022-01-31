@@ -1,9 +1,7 @@
-import numpy as np
 import pandas as pd
 
 
-def ema(x: pd.Series,
-        span: int = 10):
+def ema(x: pd.Series, span: int = 10):
     """
     Compute the exponential moving average (ema) of a pd.Series data.
 
@@ -14,9 +12,9 @@ def ema(x: pd.Series,
     """
     # Sanity checks.
     if not isinstance(x, pd.Series):
-        raise TypeError("x must be a pd.Series (x is", type(x), ").")
+        raise TypeError(f"x {type(x)} must be a pd.Series.")
     if span <= 0:
-        raise ValueError("span must be > 0.")
+        raise ValueError(f"span {type(span)}{span} must be int > 0.")
 
     # Compute the ema based on the exponential moving window `ewm` of pandas.
     y = x.ewm(span=span, adjust=True).mean()
@@ -24,9 +22,9 @@ def ema(x: pd.Series,
     return y
 
 
-def future_return(x: pd.Series, horizon: int = 5):
+def future_return(x: pd.Series, horizon: int = 1):
     """
-    Compute the future return over a fix time *horizon* of the pd.Series *x*. The future return *y* is defined as
+    Compute the future return over a fixed time `horizon` of the pd.Series `x`. The future return *y* is defined as
 
     .. math::
         y[t] = \\frac{ x[t+horizon] - x[t]}{x[t]}
@@ -34,10 +32,8 @@ def future_return(x: pd.Series, horizon: int = 5):
     If `x` has units of value, then `y` can be interpreted as an investment return.
     In general, `y` measure the change over time horizon `horizon` of the quantity `x`.
 
-    :param  x: Target data to compute the future return.
-    :type   x: pd.Series.
-    :param  horizon: Time horizon, a positive integer.
-    :type   horizon: int.
+    :param pd.Series x: Target data to compute the future return.
+    :param int  horizon: Time horizon, a positive integer.
     :return: A pd.Series y.
     :raises: ValueError if horizon <= 0.
     """
@@ -61,10 +57,8 @@ def past_return(x: pd.Series, horizon: int = 1):
     If `x` has units of value, then `y` can be interpreted as an investment return.
     In general, `y` measure the change over time horizon `horizon` of the quantity `x`.
 
-    :param  x: Target data to compute the future return.
-    :type   x: pd.Series.
-    :param  horizon: Time horizon, a positive integer.
-    :type   horizon: int.
+    :param pd.Series  x: Target data to compute the future return.
+    :param int  horizon: Time horizon, a positive integer.
     :return: A pd.Series y.
     :raises: ValueError if horizon <= 0.
     """
@@ -89,15 +83,11 @@ def macd(x: pd.Series,
     bullish market while a negative histogram suggests a bearish market. Take care that the indicator is not perfect
     (false positive/negative) and typically lags in time (detects momentum reversal after they happen).
 
-    :param  x: Target data to compute the macd.
-    :type   x: pd.Series
-    :param  short_span: Span for the fast EMA curve. Default=12.
-    :type   short_span: int
-    :param  long_span:  Span for the slow EMA curve. Default=26.
-    :type   long_span:  int
-    :param  signal_span: Span for the signal line. Default=9.
-    :type   signal_span: int
-    :return: MACD, signal_line, histogram, a 3D tuple.
+    :param pd.Series  x: Target data to compute the macd.
+    :param int short_span: Span for the fast EMA curve. Default=12.
+    :param in long_span:  Span for the slow EMA curve. Default=26.
+    :param int signal_span: Span for the signal line. Default=9.
+    :return: A 3D tuple (MACD, signal_line, histogram)
     """
 
     short_ema = ema(x, short_span)
@@ -118,20 +108,17 @@ def stochastic(x: pd.Series,
     is defined as
 
     .. math::
-        y[t] = 100.0 \\frac{x[t] - \\min(x_{low}[t-period+1:])}{\\max(x_{high}[t-period+1:]) - \\min(x_{low}[t-period+1:])}
+        y[t] = 100.0 \\frac{x[t] - \\min(x_{low}[t-period+1:])}{\\max(x_{high}[t-period+1:]) -
+         \\min(x_{low}[t-period+1:])}
 
     If you don't have access to a separate data for the low/high records of your data, the function uses the data
     itself to compute them. For financial data, where high/low values are reached within a trading period, this might
     not be optimal.
 
-    :param  x: Target data to compute the stochastic indicator.
-    :type   x: pd.Series
-    :param  x_low: Minimum value of target data to compute the stochastic indicator.
-    :type   x_low: pd.Series
-    :param  x_high: Maximum value of target data to compute the stochastic indicator.
-    :type   x_high: pd.Series
-    :param  period: Period over which the stochastic indicator is computed. Default=14.
-    :type   period: int
+    :param pd.Series  x: Target data to compute the stochastic indicator.
+    :param pd.Series  x_low: Minimum value of target data to compute the stochastic indicator.
+    :param pd.Series x_high: Maximum value of target data to compute the stochastic indicator.
+    :param int  period: Period over which the stochastic indicator is computed. Default=14.
     :return: A tuple (stochastic, stochastic_smoothed).
     """
 
@@ -148,14 +135,3 @@ def stochastic(x: pd.Series,
     y_smoothed = ema(y, span=int(period/3.0))
 
     return y, y_smoothed
-
-
-def test_func(x):
-    """This function will try to calculate:
-
-    .. math::
-        \sum_{i=1}^{\\infty} x_{i}
-
-    good luck!
-    """
-    pass

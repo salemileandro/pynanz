@@ -1,13 +1,13 @@
-import numpy as np
-import datetime
-import pandas as pd
-import yfinance as yf
-from typing import Union, List
-from . import indicators
 import pickle
-import copy
 from contextlib import redirect_stdout
 import io
+from typing import Union, List
+
+import numpy as np
+import pandas as pd
+import yfinance as yf
+
+from . import indicators
 
 
 class Market:
@@ -117,6 +117,7 @@ class Market:
         # Reset the pd.DataFrame to None
         self.data = None
 
+        _start = start
         if start is not None:
             _start = pd.Timestamp(start) - pd.Timedelta(days=7)
 
@@ -157,6 +158,8 @@ class Market:
         if start is not None:
             self.data = self.data[self.data.index > start]
 
+        self.data.sort_index(axis=1, inplace=True)
+
         self.tickers = self.data.columns.get_level_values(level=0).unique().to_numpy()
 
     def download_metadata(self):
@@ -194,11 +197,57 @@ class Market:
         else:
             self.etf.set_index("ticker", drop=True, inplace=True)
 
-    def row(self, loc: pd.Timestamp, target: str = None, drop_level: bool = True):
-        if target:
-            return self.data.loc[loc].xs(target, level=1, drop_level=drop_level)
-        else:
-            return self.data.loc[loc]
+    def __getitem__(self, item):
+        """
+        Accessor to the self.data attribute via the [] operator. `item` needs to be a tuple of length 3, with
+        item[0] a pd.Timestamp or a slice of pd.Timestamp/None, item[1] a ticker (str) or a list of tickers (list[str])
+        and item[1] an attribute (str) or a list of attributes (list[str]).
+
+        It ALWAYS returns a DataFrame (for consistency reasons).
+
+        .. code-block:: python
+
+            ### CODE SNIPPET
+            import pynanz as pn
+
+            mkt = pn.Market()
+            mkt.download(tickers = ["AAPL", "AMZN", "USFD"], start=pd.Timestamp("2015-01-01"))
+
+            # Get all the close prices for all time and all tickers
+            df = mkt[:, :, "close"]
+            # Get all the open/close prices for all time and all tickers
+            df = mkt[:, :, ["close", "open"]]
+            # Get all the open/close prices for all time but just for AAPL
+            df = mkt[:, "AAPL", ["close", "open"]]
+            # Get all the open/close prices for the year 2015 time but just for AAPL
+            df = mkt[pd.Timestamp("2015-01-01"):pd.Timestamp("2015-12-31"), "AAPL", ["close", "open"]]
+
+            ## ... other combinations are possible !!!
+
+        """
+
+        if not isinstance(item, tuple) or len(item) != 3:
+            raise KeyError()
+
+        date_idx = item[0]
+        ticker_idx = item[1]
+        attr_idx = item[2]
+
+        if isinstance(date_idx, pd.Timestamp):
+            date_idx = [date_idx]
+        if isinstance(ticker_idx, str):
+            ticker_idx = [ticker_idx]
+        if isinstance(attr_idx, str):
+            attr_idx = [attr_idx]
+
+        df = self.data.loc[date_idx, pd.IndexSlice[ticker_idx, attr_idx]].copy()
+
+        if len(np.unique([x for x, y in df.columns])) == 1:
+            df = df.droplevel(level=0, axis=1)
+        elif len(np.unique([y for x, y in df.columns])) == 1:
+            df = df.droplevel(level=1, axis=1)
+
+        return df
 
     @classmethod
     def load(cls, filename):
@@ -447,29 +496,13 @@ class Market:
         """
         return self.data.index[-1]
 
-    def is_trading_day(self, date: Union[datetime.date, pd.Timestamp]):
+    def is_trading_day(self, date: pd.Timestamp):
         """
         Check if the date is an actual trading day, i.e. if it is included in the self.data.index.
 
-        :param datetime.date,pd.Timestamp date: Date to check. Can be a datetime.date object or a pd.Timestamp object.
-        :return: True if the date has trading date, False otherwise
-         
+        :param pd.Timestamp date: Date to check.
+        :return: True if the date has trading date, False otherwise.
         """
-        if isinstance(date, datetime.date):
-            date = pd.Timestamp(year=date.year, month=date.month, day=date.day)
-
-        if not isinstance(date, pd.Timestamp):
-            raise TypeError(f"type(date)={type(date)} must be of type datetime.date or pd.Timestamp")
+        date = pd.Timestamp(date)
 
         return bool(date in self.data.index.values)
-
-    def get_price_history(self, attribute: str = "close", add_cash: bool = True):
-        if self.data is None:
-            raise ValueError("self.data has to be initialized first.")
-
-        df = self.data.xs(attribute, level=1, axis=1).copy()
-
-        if add_cash:
-            df["CASH"] = 1.0
-
-        return df

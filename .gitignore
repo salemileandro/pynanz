@@ -10,3 +10,4 @@ build.sh
 build/*
 dist/*
 pynanz_salemileandro.egg-info/*
+*.pkl

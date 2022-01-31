@@ -64,16 +64,16 @@
            <div itemprop="articleBody">
              
   <h1>Source code for pynanz.Market</h1><div class="highlight"><pre>
-<span></span><span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
-<span class="kn">import</span> <span class="nn">datetime</span>
-<span class="kn">import</span> <span class="nn">pandas</span> <span class="k">as</span> <span class="nn">pd</span>
-<span class="kn">import</span> <span class="nn">yfinance</span> <span class="k">as</span> <span class="nn">yf</span>
-<span class="kn">from</span> <span class="nn">typing</span> <span class="kn">import</span> <span class="n">Union</span><span class="p">,</span> <span class="n">List</span>
-<span class="kn">from</span> <span class="nn">.</span> <span class="kn">import</span> <span class="n">indicators</span>
-<span class="kn">import</span> <span class="nn">pickle</span>
-<span class="kn">import</span> <span class="nn">copy</span>
+<span></span><span class="kn">import</span> <span class="nn">pickle</span>
 <span class="kn">from</span> <span class="nn">contextlib</span> <span class="kn">import</span> <span class="n">redirect_stdout</span>
 <span class="kn">import</span> <span class="nn">io</span>
+<span class="kn">from</span> <span class="nn">typing</span> <span class="kn">import</span> <span class="n">Union</span><span class="p">,</span> <span class="n">List</span>
+
+<span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+<span class="kn">import</span> <span class="nn">pandas</span> <span class="k">as</span> <span class="nn">pd</span>
+<span class="kn">import</span> <span class="nn">yfinance</span> <span class="k">as</span> <span class="nn">yf</span>
+
+<span class="kn">from</span> <span class="nn">.</span> <span class="kn">import</span> <span class="n">indicators</span>
 
 
 <div class="viewcode-block" id="Market"><a class="viewcode-back" href="../../sources.html#pynanz.Market">[docs]</a><span class="k">class</span> <span class="nc">Market</span><span class="p">:</span>
@@ -183,6 +183,7 @@
         <span class="c1"># Reset the pd.DataFrame to None</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">data</span> <span class="o">=</span> <span class="kc">None</span>
 
+        <span class="n">_start</span> <span class="o">=</span> <span class="n">start</span>
         <span class="k">if</span> <span class="n">start</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
             <span class="n">_start</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">Timestamp</span><span class="p">(</span><span class="n">start</span><span class="p">)</span> <span class="o">-</span> <span class="n">pd</span><span class="o">.</span><span class="n">Timedelta</span><span class="p">(</span><span class="n">days</span><span class="o">=</span><span class="mi">7</span><span class="p">)</span>
 
@@ -223,6 +224,8 @@
         <span class="k">if</span> <span class="n">start</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">data</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">data</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">data</span><span class="o">.</span><span class="n">index</span> <span class="o">&gt;</span> <span class="n">start</span><span class="p">]</span>
 
+        <span class="bp">self</span><span class="o">.</span><span class="n">data</span><span class="o">.</span><span class="n">sort_index</span><span class="p">(</span><span class="n">axis</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">inplace</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+
         <span class="bp">self</span><span class="o">.</span><span class="n">tickers</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">data</span><span class="o">.</span><span class="n">columns</span><span class="o">.</span><span class="n">get_level_values</span><span class="p">(</span><span class="n">level</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span><span class="o">.</span><span class="n">unique</span><span class="p">()</span><span class="o">.</span><span class="n">to_numpy</span><span class="p">()</span></div>
 
 <div class="viewcode-block" id="Market.download_metadata"><a class="viewcode-back" href="../../sources.html#pynanz.Market.download_metadata">[docs]</a>    <span class="k">def</span> <span class="nf">download_metadata</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
@@ -260,11 +263,57 @@
         <span class="k">else</span><span class="p">:</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">etf</span><span class="o">.</span><span class="n">set_index</span><span class="p">(</span><span class="s2">&quot;ticker&quot;</span><span class="p">,</span> <span class="n">drop</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">inplace</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span></div>
 
-    <span class="k">def</span> <span class="nf">row</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">loc</span><span class="p">:</span> <span class="n">pd</span><span class="o">.</span><span class="n">Timestamp</span><span class="p">,</span> <span class="n">target</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">drop_level</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span><span class="p">):</span>
-        <span class="k">if</span> <span class="n">target</span><span class="p">:</span>
-            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">data</span><span class="o">.</span><span class="n">loc</span><span class="p">[</span><span class="n">loc</span><span class="p">]</span><span class="o">.</span><span class="n">xs</span><span class="p">(</span><span class="n">target</span><span class="p">,</span> <span class="n">level</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">drop_level</span><span class="o">=</span><span class="n">drop_level</span><span class="p">)</span>
-        <span class="k">else</span><span class="p">:</span>
-            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">data</span><span class="o">.</span><span class="n">loc</span><span class="p">[</span><span class="n">loc</span><span class="p">]</span>
+<div class="viewcode-block" id="Market.__getitem__"><a class="viewcode-back" href="../../sources.html#pynanz.Market.__getitem__">[docs]</a>    <span class="k">def</span> <span class="fm">__getitem__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">item</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Accessor to the self.data attribute via the [] operator. `item` needs to be a tuple of length 3, with</span>
+<span class="sd">        item[0] a pd.Timestamp or a slice of pd.Timestamp/None, item[1] a ticker (str) or a list of tickers (list[str])</span>
+<span class="sd">        and item[1] an attribute (str) or a list of attributes (list[str]).</span>
+
+<span class="sd">        It ALWAYS returns a DataFrame (for consistency reasons).</span>
+
+<span class="sd">        .. code-block:: python</span>
+
+<span class="sd">            ### CODE SNIPPET</span>
+<span class="sd">            import pynanz as pn</span>
+
+<span class="sd">            mkt = pn.Market()</span>
+<span class="sd">            mkt.download(tickers = [&quot;AAPL&quot;, &quot;AMZN&quot;, &quot;USFD&quot;], start=pd.Timestamp(&quot;2015-01-01&quot;))</span>
+
+<span class="sd">            # Get all the close prices for all time and all tickers</span>
+<span class="sd">            df = mkt[:, :, &quot;close&quot;]</span>
+<span class="sd">            # Get all the open/close prices for all time and all tickers</span>
+<span class="sd">            df = mkt[:, :, [&quot;close&quot;, &quot;open&quot;]]</span>
+<span class="sd">            # Get all the open/close prices for all time but just for AAPL</span>
+<span class="sd">            df = mkt[:, &quot;AAPL&quot;, [&quot;close&quot;, &quot;open&quot;]]</span>
+<span class="sd">            # Get all the open/close prices for the year 2015 time but just for AAPL</span>
+<span class="sd">            df = mkt[pd.Timestamp(&quot;2015-01-01&quot;):pd.Timestamp(&quot;2015-12-31&quot;), &quot;AAPL&quot;, [&quot;close&quot;, &quot;open&quot;]]</span>
+
+<span class="sd">            ## ... other combinations are possible !!!</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">item</span><span class="p">,</span> <span class="nb">tuple</span><span class="p">)</span> <span class="ow">or</span> <span class="nb">len</span><span class="p">(</span><span class="n">item</span><span class="p">)</span> <span class="o">!=</span> <span class="mi">3</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">KeyError</span><span class="p">()</span>
+
+        <span class="n">date_idx</span> <span class="o">=</span> <span class="n">item</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+        <span class="n">ticker_idx</span> <span class="o">=</span> <span class="n">item</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span>
+        <span class="n">attr_idx</span> <span class="o">=</span> <span class="n">item</span><span class="p">[</span><span class="mi">2</span><span class="p">]</span>
+
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">date_idx</span><span class="p">,</span> <span class="n">pd</span><span class="o">.</span><span class="n">Timestamp</span><span class="p">):</span>
+            <span class="n">date_idx</span> <span class="o">=</span> <span class="p">[</span><span class="n">date_idx</span><span class="p">]</span>
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">ticker_idx</span><span class="p">,</span> <span class="nb">str</span><span class="p">):</span>
+            <span class="n">ticker_idx</span> <span class="o">=</span> <span class="p">[</span><span class="n">ticker_idx</span><span class="p">]</span>
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">attr_idx</span><span class="p">,</span> <span class="nb">str</span><span class="p">):</span>
+            <span class="n">attr_idx</span> <span class="o">=</span> <span class="p">[</span><span class="n">attr_idx</span><span class="p">]</span>
+
+        <span class="n">df</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">data</span><span class="o">.</span><span class="n">loc</span><span class="p">[</span><span class="n">date_idx</span><span class="p">,</span> <span class="n">pd</span><span class="o">.</span><span class="n">IndexSlice</span><span class="p">[</span><span class="n">ticker_idx</span><span class="p">,</span> <span class="n">attr_idx</span><span class="p">]]</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
+
+        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">unique</span><span class="p">([</span><span class="n">x</span> <span class="k">for</span> <span class="n">x</span><span class="p">,</span> <span class="n">y</span> <span class="ow">in</span> <span class="n">df</span><span class="o">.</span><span class="n">columns</span><span class="p">]))</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>
+            <span class="n">df</span> <span class="o">=</span> <span class="n">df</span><span class="o">.</span><span class="n">droplevel</span><span class="p">(</span><span class="n">level</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
+        <span class="k">elif</span> <span class="nb">len</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">unique</span><span class="p">([</span><span class="n">y</span> <span class="k">for</span> <span class="n">x</span><span class="p">,</span> <span class="n">y</span> <span class="ow">in</span> <span class="n">df</span><span class="o">.</span><span class="n">columns</span><span class="p">]))</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>
+            <span class="n">df</span> <span class="o">=</span> <span class="n">df</span><span class="o">.</span><span class="n">droplevel</span><span class="p">(</span><span class="n">level</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
+
+        <span class="k">return</span> <span class="n">df</span></div>
 
 <div class="viewcode-block" id="Market.load"><a class="viewcode-back" href="../../sources.html#pynanz.Market.load">[docs]</a>    <span class="nd">@classmethod</span>
     <span class="k">def</span> <span class="nf">load</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="n">filename</span><span class="p">):</span>
@@ -513,39 +562,16 @@
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">data</span><span class="o">.</span><span class="n">index</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span></div>
 
-<div class="viewcode-block" id="Market.is_trading_day"><a class="viewcode-back" href="../../sources.html#pynanz.Market.is_trading_day">[docs]</a>    <span class="k">def</span> <span class="nf">is_trading_day</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">date</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="n">datetime</span><span class="o">.</span><span class="n">date</span><span class="p">,</span> <span class="n">pd</span><span class="o">.</span><span class="n">Timestamp</span><span class="p">]):</span>
+<div class="viewcode-block" id="Market.is_trading_day"><a class="viewcode-back" href="../../sources.html#pynanz.Market.is_trading_day">[docs]</a>    <span class="k">def</span> <span class="nf">is_trading_day</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">date</span><span class="p">:</span> <span class="n">pd</span><span class="o">.</span><span class="n">Timestamp</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Check if the date is an actual trading day, i.e. if it is included in the self.data.index.</span>
 
-<span class="sd">        :param datetime.date,pd.Timestamp date: Date to check. Can be a datetime.date object or a pd.Timestamp object.</span>
-<span class="sd">        :return: True if the date has trading date, False otherwise</span>
-<span class="sd">         </span>
+<span class="sd">        :param pd.Timestamp date: Date to check.</span>
+<span class="sd">        :return: True if the date has trading date, False otherwise.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
-        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">date</span><span class="p">,</span> <span class="n">datetime</span><span class="o">.</span><span class="n">date</span><span class="p">):</span>
-            <span class="n">date</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">Timestamp</span><span class="p">(</span><span class="n">year</span><span class="o">=</span><span class="n">date</span><span class="o">.</span><span class="n">year</span><span class="p">,</span> <span class="n">month</span><span class="o">=</span><span class="n">date</span><span class="o">.</span><span class="n">month</span><span class="p">,</span> <span class="n">day</span><span class="o">=</span><span class="n">date</span><span class="o">.</span><span class="n">day</span><span class="p">)</span>
+        <span class="n">date</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">Timestamp</span><span class="p">(</span><span class="n">date</span><span class="p">)</span>
 
-        <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">date</span><span class="p">,</span> <span class="n">pd</span><span class="o">.</span><span class="n">Timestamp</span><span class="p">):</span>
-            <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;type(date)=</span><span class="si">{</span><span class="nb">type</span><span class="p">(</span><span class="n">date</span><span class="p">)</span><span class="si">}</span><span class="s2"> must be of type datetime.date or pd.Timestamp&quot;</span><span class="p">)</span>
-
-        <span class="k">return</span> <span class="nb">bool</span><span class="p">(</span><span class="n">date</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">data</span><span class="o">.</span><span class="n">index</span><span class="o">.</span><span class="n">values</span><span class="p">)</span></div>
-
-<div class="viewcode-block" id="Market.get_return"><a class="viewcode-back" href="../../sources.html#pynanz.Market.get_return">[docs]</a>    <span class="k">def</span> <span class="nf">get_return</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">add_cash</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span><span class="p">,</span> <span class="n">horizon</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">1</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">        Return a pd.DataFrame of daily returns</span>
-<span class="sd">        &quot;&quot;&quot;</span>
-        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">data</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
-            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;self.data has to be initialized first.&quot;</span><span class="p">)</span>
-
-        <span class="n">df</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">data</span><span class="o">.</span><span class="n">xs</span><span class="p">(</span><span class="s1">&#39;close&#39;</span><span class="p">,</span> <span class="n">level</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
-        <span class="k">for</span> <span class="n">c</span> <span class="ow">in</span> <span class="n">df</span><span class="o">.</span><span class="n">columns</span><span class="p">:</span>
-            <span class="n">df</span><span class="p">[</span><span class="n">c</span><span class="p">]</span> <span class="o">=</span> <span class="n">indicators</span><span class="o">.</span><span class="n">past_return</span><span class="p">(</span><span class="n">df</span><span class="p">[</span><span class="n">c</span><span class="p">],</span> <span class="n">horizon</span><span class="o">=</span><span class="n">horizon</span><span class="p">)</span>
-
-        <span class="k">if</span> <span class="n">add_cash</span><span class="p">:</span>
-            <span class="n">df</span><span class="p">[</span><span class="s2">&quot;CASH&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="mf">0.0</span>
-
-        <span class="n">df</span><span class="o">.</span><span class="n">dropna</span><span class="p">(</span><span class="n">inplace</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
-
-        <span class="k">return</span> <span class="n">df</span></div></div>
+        <span class="k">return</span> <span class="nb">bool</span><span class="p">(</span><span class="n">date</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">data</span><span class="o">.</span><span class="n">index</span><span class="o">.</span><span class="n">values</span><span class="p">)</span></div></div>
 </pre></div>
 
            </div>

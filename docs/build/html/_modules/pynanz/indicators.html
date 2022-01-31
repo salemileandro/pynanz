@@ -64,12 +64,10 @@
            <div itemprop="articleBody">
              
   <h1>Source code for pynanz.indicators</h1><div class="highlight"><pre>
-<span></span><span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
-<span class="kn">import</span> <span class="nn">pandas</span> <span class="k">as</span> <span class="nn">pd</span>
+<span></span><span class="kn">import</span> <span class="nn">pandas</span> <span class="k">as</span> <span class="nn">pd</span>
 
 
-<div class="viewcode-block" id="ema"><a class="viewcode-back" href="../../sources.html#pynanz.indicators.ema">[docs]</a><span class="k">def</span> <span class="nf">ema</span><span class="p">(</span><span class="n">x</span><span class="p">:</span> <span class="n">pd</span><span class="o">.</span><span class="n">Series</span><span class="p">,</span>
-        <span class="n">span</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">10</span><span class="p">):</span>
+<div class="viewcode-block" id="ema"><a class="viewcode-back" href="../../sources.html#pynanz.indicators.ema">[docs]</a><span class="k">def</span> <span class="nf">ema</span><span class="p">(</span><span class="n">x</span><span class="p">:</span> <span class="n">pd</span><span class="o">.</span><span class="n">Series</span><span class="p">,</span> <span class="n">span</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">10</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Compute the exponential moving average (ema) of a pd.Series data.</span>
 
@@ -80,9 +78,9 @@
 <span class="sd">    &quot;&quot;&quot;</span>
     <span class="c1"># Sanity checks.</span>
     <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">pd</span><span class="o">.</span><span class="n">Series</span><span class="p">):</span>
-        <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="s2">&quot;x must be a pd.Series (x is&quot;</span><span class="p">,</span> <span class="nb">type</span><span class="p">(</span><span class="n">x</span><span class="p">),</span> <span class="s2">&quot;).&quot;</span><span class="p">)</span>
+        <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;x </span><span class="si">{</span><span class="nb">type</span><span class="p">(</span><span class="n">x</span><span class="p">)</span><span class="si">}</span><span class="s2"> must be a pd.Series.&quot;</span><span class="p">)</span>
     <span class="k">if</span> <span class="n">span</span> <span class="o">&lt;=</span> <span class="mi">0</span><span class="p">:</span>
-        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;span must be &gt; 0.&quot;</span><span class="p">)</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;span </span><span class="si">{</span><span class="nb">type</span><span class="p">(</span><span class="n">span</span><span class="p">)</span><span class="si">}{</span><span class="n">span</span><span class="si">}</span><span class="s2"> must be int &gt; 0.&quot;</span><span class="p">)</span>
 
     <span class="c1"># Compute the ema based on the exponential moving window `ewm` of pandas.</span>
     <span class="n">y</span> <span class="o">=</span> <span class="n">x</span><span class="o">.</span><span class="n">ewm</span><span class="p">(</span><span class="n">span</span><span class="o">=</span><span class="n">span</span><span class="p">,</span> <span class="n">adjust</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span><span class="o">.</span><span class="n">mean</span><span class="p">()</span>
@@ -90,9 +88,9 @@
     <span class="k">return</span> <span class="n">y</span></div>
 
 
-<div class="viewcode-block" id="future_return"><a class="viewcode-back" href="../../sources.html#pynanz.indicators.future_return">[docs]</a><span class="k">def</span> <span class="nf">future_return</span><span class="p">(</span><span class="n">x</span><span class="p">:</span> <span class="n">pd</span><span class="o">.</span><span class="n">Series</span><span class="p">,</span> <span class="n">horizon</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">5</span><span class="p">):</span>
+<div class="viewcode-block" id="future_return"><a class="viewcode-back" href="../../sources.html#pynanz.indicators.future_return">[docs]</a><span class="k">def</span> <span class="nf">future_return</span><span class="p">(</span><span class="n">x</span><span class="p">:</span> <span class="n">pd</span><span class="o">.</span><span class="n">Series</span><span class="p">,</span> <span class="n">horizon</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">1</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">    Compute the future return over a fix time *horizon* of the pd.Series *x*. The future return *y* is defined as</span>
+<span class="sd">    Compute the future return over a fixed time `horizon` of the pd.Series `x`. The future return *y* is defined as</span>
 
 <span class="sd">    .. math::</span>
 <span class="sd">        y[t] = \\frac{ x[t+horizon] - x[t]}{x[t]}</span>
@@ -100,10 +98,8 @@
 <span class="sd">    If `x` has units of value, then `y` can be interpreted as an investment return.</span>
 <span class="sd">    In general, `y` measure the change over time horizon `horizon` of the quantity `x`.</span>
 
-<span class="sd">    :param  x: Target data to compute the future return.</span>
-<span class="sd">    :type   x: pd.Series.</span>
-<span class="sd">    :param  horizon: Time horizon, a positive integer.</span>
-<span class="sd">    :type   horizon: int.</span>
+<span class="sd">    :param pd.Series x: Target data to compute the future return.</span>
+<span class="sd">    :param int  horizon: Time horizon, a positive integer.</span>
 <span class="sd">    :return: A pd.Series y.</span>
 <span class="sd">    :raises: ValueError if horizon &lt;= 0.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
@@ -116,7 +112,7 @@
     <span class="k">return</span> <span class="n">y</span></div>
 
 
-<div class="viewcode-block" id="past_return"><a class="viewcode-back" href="../../sources.html#pynanz.indicators.past_return">[docs]</a><span class="k">def</span> <span class="nf">past_return</span><span class="p">(</span><span class="n">x</span><span class="p">:</span> <span class="n">pd</span><span class="o">.</span><span class="n">Series</span><span class="p">,</span> <span class="n">horizon</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">5</span><span class="p">):</span>
+<div class="viewcode-block" id="past_return"><a class="viewcode-back" href="../../sources.html#pynanz.indicators.past_return">[docs]</a><span class="k">def</span> <span class="nf">past_return</span><span class="p">(</span><span class="n">x</span><span class="p">:</span> <span class="n">pd</span><span class="o">.</span><span class="n">Series</span><span class="p">,</span> <span class="n">horizon</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">1</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Compute the past return, that is the realized return, over a fix time `horizon` of the pd.Series `x`.</span>
 <span class="sd">    The past return `y` is defined as</span>
@@ -127,10 +123,8 @@
 <span class="sd">    If `x` has units of value, then `y` can be interpreted as an investment return.</span>
 <span class="sd">    In general, `y` measure the change over time horizon `horizon` of the quantity `x`.</span>
 
-<span class="sd">    :param  x: Target data to compute the future return.</span>
-<span class="sd">    :type   x: pd.Series.</span>
-<span class="sd">    :param  horizon: Time horizon, a positive integer.</span>
-<span class="sd">    :type   horizon: int.</span>
+<span class="sd">    :param pd.Series  x: Target data to compute the future return.</span>
+<span class="sd">    :param int  horizon: Time horizon, a positive integer.</span>
 <span class="sd">    :return: A pd.Series y.</span>
 <span class="sd">    :raises: ValueError if horizon &lt;= 0.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
@@ -155,15 +149,11 @@
 <span class="sd">    bullish market while a negative histogram suggests a bearish market. Take care that the indicator is not perfect</span>
 <span class="sd">    (false positive/negative) and typically lags in time (detects momentum reversal after they happen).</span>
 
-<span class="sd">    :param  x: Target data to compute the macd.</span>
-<span class="sd">    :type   x: pd.Series</span>
-<span class="sd">    :param  short_span: Span for the fast EMA curve. Default=12.</span>
-<span class="sd">    :type   short_span: int</span>
-<span class="sd">    :param  long_span:  Span for the slow EMA curve. Default=26.</span>
-<span class="sd">    :type   long_span:  int</span>
-<span class="sd">    :param  signal_span: Span for the signal line. Default=9.</span>
-<span class="sd">    :type   signal_span: int</span>
-<span class="sd">    :return: MACD, signal_line, histogram, a 3D tuple.</span>
+<span class="sd">    :param pd.Series  x: Target data to compute the macd.</span>
+<span class="sd">    :param int short_span: Span for the fast EMA curve. Default=12.</span>
+<span class="sd">    :param in long_span:  Span for the slow EMA curve. Default=26.</span>
+<span class="sd">    :param int signal_span: Span for the signal line. Default=9.</span>
+<span class="sd">    :return: A 3D tuple (MACD, signal_line, histogram)</span>
 <span class="sd">    &quot;&quot;&quot;</span>
 
     <span class="n">short_ema</span> <span class="o">=</span> <span class="n">ema</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">short_span</span><span class="p">)</span>
@@ -184,20 +174,17 @@
 <span class="sd">    is defined as</span>
 
 <span class="sd">    .. math::</span>
-<span class="sd">        y[t] = 100.0 \\frac{x[t] - \\min(x_{low}[t-period+1:])}{\\max(x_{high}[t-period+1:]) - \\min(x_{low}[t-period+1:])}</span>
+<span class="sd">        y[t] = 100.0 \\frac{x[t] - \\min(x_{low}[t-period+1:])}{\\max(x_{high}[t-period+1:]) -</span>
+<span class="sd">         \\min(x_{low}[t-period+1:])}</span>
 
 <span class="sd">    If you don&#39;t have access to a separate data for the low/high records of your data, the function uses the data</span>
 <span class="sd">    itself to compute them. For financial data, where high/low values are reached within a trading period, this might</span>
 <span class="sd">    not be optimal.</span>
 
-<span class="sd">    :param  x: Target data to compute the stochastic indicator.</span>
-<span class="sd">    :type   x: pd.Series</span>
-<span class="sd">    :param  x_low: Minimum value of target data to compute the stochastic indicator.</span>
-<span class="sd">    :type   x_low: pd.Series</span>
-<span class="sd">    :param  x_high: Maximum value of target data to compute the stochastic indicator.</span>
-<span class="sd">    :type   x_high: pd.Series</span>
-<span class="sd">    :param  period: Period over which the stochastic indicator is computed. Default=14.</span>
-<span class="sd">    :type   period: int</span>
+<span class="sd">    :param pd.Series  x: Target data to compute the stochastic indicator.</span>
+<span class="sd">    :param pd.Series  x_low: Minimum value of target data to compute the stochastic indicator.</span>
+<span class="sd">    :param pd.Series x_high: Maximum value of target data to compute the stochastic indicator.</span>
+<span class="sd">    :param int  period: Period over which the stochastic indicator is computed. Default=14.</span>
 <span class="sd">    :return: A tuple (stochastic, stochastic_smoothed).</span>
 <span class="sd">    &quot;&quot;&quot;</span>
 
@@ -214,17 +201,6 @@
     <span class="n">y_smoothed</span> <span class="o">=</span> <span class="n">ema</span><span class="p">(</span><span class="n">y</span><span class="p">,</span> <span class="n">span</span><span class="o">=</span><span class="nb">int</span><span class="p">(</span><span class="n">period</span><span class="o">/</span><span class="mf">3.0</span><span class="p">))</span>
 
     <span class="k">return</span> <span class="n">y</span><span class="p">,</span> <span class="n">y_smoothed</span></div>
-
-
-<div class="viewcode-block" id="test_func"><a class="viewcode-back" href="../../sources.html#pynanz.indicators.test_func">[docs]</a><span class="k">def</span> <span class="nf">test_func</span><span class="p">(</span><span class="n">x</span><span class="p">):</span>
-    <span class="sd">&quot;&quot;&quot;This function will try to calculate:</span>
-
-<span class="sd">    .. math::</span>
-<span class="sd">        \sum_{i=1}^{\\infty} x_{i}</span>
-
-<span class="sd">    good luck!</span>
-<span class="sd">    &quot;&quot;&quot;</span>
-    <span class="k">pass</span></div>
 </pre></div>
 
            </div>

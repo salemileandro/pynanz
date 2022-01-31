@@ -196,11 +196,14 @@ class MeanVariance:
 
         return exp_ret, cov_mat
 
-    def meanvariance_optimization(self,
-                                  start: pd.Timestamp = None,
-                                  end: pd.Timestamp = None,
-                                  frequency: int = 1,
-                                  n_workers: int = None):
+    def optimize(self,
+                 start: pd.Timestamp = None,
+                 end: pd.Timestamp = None,
+                 frequency: int = 1,
+                 n_workers: int = None):
+        """
+        Solve the Mean-Variance optimization problem from `start` to `end` at frequency `frequency`
+        """
 
         if start is None:
             start = self.data.index[0]
@@ -237,10 +240,11 @@ class MeanVariance:
                     yield exp_ret, cov_mat, param, max_weight
 
         with Pool(processes=n_workers) as p:
-            if self._risk_aversion is not None:
-                result = p.starmap(MeanVariance.solver, _generator(self.data))
-            elif self._sigma_target is not None:
+            if self._sigma_target is not None:
                 result = p.starmap(MeanVariance.bisection_solver, _generator(self.data))
+            else:
+                result = p.starmap(MeanVariance.solver, _generator(self.data))
+
 
         self.portfolio = pd.DataFrame(index=_index)
         for i in range(len(self.tickers)):

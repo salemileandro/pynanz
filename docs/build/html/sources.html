@@ -106,6 +106,33 @@ e.g. [“AAPL”, “GOOG”, “USFD”, “ARKF”]. Symbols are fully capital
 </dd>
 </dl>
 <dl class="py method">
+<dt class="sig sig-object py" id="pynanz.Market.__getitem__">
+<span class="sig-name descname"><span class="pre">__getitem__</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">item</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/pynanz/Market.html#Market.__getitem__"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#pynanz.Market.__getitem__" title="Permalink to this definition"></a></dt>
+<dd><p>Accessor to the self.data attribute via the [] operator. <cite>item</cite> needs to be a tuple of length 3, with
+item[0] a pd.Timestamp or a slice of pd.Timestamp/None, item[1] a ticker (str) or a list of tickers (list[str])
+and item[1] an attribute (str) or a list of attributes (list[str]).</p>
+<p>It ALWAYS returns a DataFrame (for consistency reasons).</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="c1">### CODE SNIPPET</span>
+<span class="kn">import</span> <span class="nn">pynanz</span> <span class="k">as</span> <span class="nn">pn</span>
+
+<span class="n">mkt</span> <span class="o">=</span> <span class="n">pn</span><span class="o">.</span><span class="n">Market</span><span class="p">()</span>
+<span class="n">mkt</span><span class="o">.</span><span class="n">download</span><span class="p">(</span><span class="n">tickers</span> <span class="o">=</span> <span class="p">[</span><span class="s2">&quot;AAPL&quot;</span><span class="p">,</span> <span class="s2">&quot;AMZN&quot;</span><span class="p">,</span> <span class="s2">&quot;USFD&quot;</span><span class="p">],</span> <span class="n">start</span><span class="o">=</span><span class="n">pd</span><span class="o">.</span><span class="n">Timestamp</span><span class="p">(</span><span class="s2">&quot;2015-01-01&quot;</span><span class="p">))</span>
+
+<span class="c1"># Get all the close prices for all time and all tickers</span>
+<span class="n">df</span> <span class="o">=</span> <span class="n">mkt</span><span class="p">[:,</span> <span class="p">:,</span> <span class="s2">&quot;close&quot;</span><span class="p">]</span>
+<span class="c1"># Get all the open/close prices for all time and all tickers</span>
+<span class="n">df</span> <span class="o">=</span> <span class="n">mkt</span><span class="p">[:,</span> <span class="p">:,</span> <span class="p">[</span><span class="s2">&quot;close&quot;</span><span class="p">,</span> <span class="s2">&quot;open&quot;</span><span class="p">]]</span>
+<span class="c1"># Get all the open/close prices for all time but just for AAPL</span>
+<span class="n">df</span> <span class="o">=</span> <span class="n">mkt</span><span class="p">[:,</span> <span class="s2">&quot;AAPL&quot;</span><span class="p">,</span> <span class="p">[</span><span class="s2">&quot;close&quot;</span><span class="p">,</span> <span class="s2">&quot;open&quot;</span><span class="p">]]</span>
+<span class="c1"># Get all the open/close prices for the year 2015 time but just for AAPL</span>
+<span class="n">df</span> <span class="o">=</span> <span class="n">mkt</span><span class="p">[</span><span class="n">pd</span><span class="o">.</span><span class="n">Timestamp</span><span class="p">(</span><span class="s2">&quot;2015-01-01&quot;</span><span class="p">):</span><span class="n">pd</span><span class="o">.</span><span class="n">Timestamp</span><span class="p">(</span><span class="s2">&quot;2015-12-31&quot;</span><span class="p">),</span> <span class="s2">&quot;AAPL&quot;</span><span class="p">,</span> <span class="p">[</span><span class="s2">&quot;close&quot;</span><span class="p">,</span> <span class="s2">&quot;open&quot;</span><span class="p">]]</span>
+
+<span class="c1">## ... other combinations are possible !!!</span>
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="py method">
 <dt class="sig sig-object py" id="pynanz.Market.__init__">
 <span class="sig-name descname"><span class="pre">__init__</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/pynanz/Market.html#Market.__init__"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#pynanz.Market.__init__" title="Permalink to this definition"></a></dt>
 <dd><p>Constructor for the StockData class. The object needs to be initialized using either</p>
@@ -192,21 +219,15 @@ Default=True.</p></li>
 </dd></dl>
 
 <dl class="py method">
-<dt class="sig sig-object py" id="pynanz.Market.get_return">
-<span class="sig-name descname"><span class="pre">get_return</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">add_cash</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">horizon</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">1</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/pynanz/Market.html#Market.get_return"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#pynanz.Market.get_return" title="Permalink to this definition"></a></dt>
-<dd><p>Return a pd.DataFrame of daily returns</p>
-</dd></dl>
-
-<dl class="py method">
 <dt class="sig sig-object py" id="pynanz.Market.is_trading_day">
-<span class="sig-name descname"><span class="pre">is_trading_day</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">date</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Union</span><span class="p"><span class="pre">[</span></span><span class="pre">datetime.date</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">pandas.Timestamp</span><span class="p"><span class="pre">]</span></span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/pynanz/Market.html#Market.is_trading_day"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#pynanz.Market.is_trading_day" title="Permalink to this definition"></a></dt>
+<span class="sig-name descname"><span class="pre">is_trading_day</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">date</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">pandas.Timestamp</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/pynanz/Market.html#Market.is_trading_day"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#pynanz.Market.is_trading_day" title="Permalink to this definition"></a></dt>
 <dd><p>Check if the date is an actual trading day, i.e. if it is included in the self.data.index.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
-<dd class="field-odd"><p><strong>date</strong> (<em>datetime.date</em><em>,</em><em>pd.Timestamp</em>) – Date to check. Can be a datetime.date object or a pd.Timestamp object.</p>
+<dd class="field-odd"><p><strong>date</strong> (<em>pd.Timestamp</em>) – Date to check.</p>
 </dd>
 <dt class="field-even">Returns</dt>
-<dd class="field-even"><p>True if the date has trading date, False otherwise</p>
+<dd class="field-even"><p>True if the date has trading date, False otherwise.</p>
 </dd>
 </dl>
 </dd></dl>
@@ -349,7 +370,7 @@ element of the covariance matrix (measure of risk). For more details, see the
 <span class="sig-name descname"><span class="pre">__init__</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">data</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">pandas.DataFrame</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">alpha</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">0.0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">risk_aversion</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">10.0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">sigma_target</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><span class="pre">float</span><span class="p"><span class="pre">]</span></span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">period</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">5</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">max_weight</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">0.5</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">horizon</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">add_cash</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">True</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/pynanz/MeanVariance.html#MeanVariance.__init__"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#pynanz.MeanVariance.__init__" title="Permalink to this definition"></a></dt>
 <dd><p>Constructor for the MeanVariance object in which the parameters are set. To
 Constructor for the MeanVariance object. In the constructor, the parameters are set. To effectively solve
-the Mean-Variance Portfolio optimization, you need to call <a class="reference internal" href="#pynanz.MeanVariance.solve" title="pynanz.MeanVariance.solve"><code class="xref py py-func docutils literal notranslate"><span class="pre">pynanz.MeanVariance.solve()</span></code></a>.</p>
+the Mean-Variance Portfolio optimization, you need to call <code class="xref py py-func docutils literal notranslate"><span class="pre">pynanz.MeanVariance.solve()</span></code>.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><ul class="simple">
@@ -375,11 +396,12 @@ Default=True.</p></li>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="pynanz.MeanVariance.bisection_solver">
-<em class="property"><span class="pre">static</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">bisection_solver</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">mu</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">numpy.ndarray</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">sigma</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">numpy.ndarray</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">risk_target</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">max_weight</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><span class="pre">numpy.ndarray</span><span class="p"><span class="pre">]</span></span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/pynanz/MeanVariance.html#MeanVariance.bisection_solver"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#pynanz.MeanVariance.bisection_solver" title="Permalink to this definition"></a></dt>
+<em class="property"><span class="pre">static</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">bisection_solver</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">mu</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">numpy.ndarray</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">sigma</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">numpy.ndarray</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">risk_target</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">max_weight</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><span class="pre">numpy.ndarray</span><span class="p"><span class="pre">]</span></span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">max_iter</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">200</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">rel_tol</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">0.001</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/pynanz/MeanVariance.html#MeanVariance.bisection_solver"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#pynanz.MeanVariance.bisection_solver" title="Permalink to this definition"></a></dt>
 <dd><p>Solve the same quadratic problem as <a class="reference internal" href="#pynanz.MeanVariance.solver" title="pynanz.MeanVariance.solver"><code class="xref py py-func docutils literal notranslate"><span class="pre">pynanz.MeanVariance.solver()</span></code></a> but targeting a specific value for
 the risk <span class="math notranslate nohighlight">\(\sigma_p\)</span> using a bisection algorithm. The risk <span class="math notranslate nohighlight">\(\sigma_p\)</span> is defined as</p>
 <div class="math notranslate nohighlight">
 \[\sigma_p = \Bigg( \sum_{i=1}^{N}\sum_{j=1}^{N} w_i w_j \Sigma_{ij} \Bigg)^{1/2}\]</div>
+<p>Take care to the rescaling of <span class="math notranslate nohighlight">\(\sigma_p\)</span> depending on the frequency at which it was computed !</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><ul class="simple">
@@ -389,6 +411,8 @@ of assets considered</p></li>
 <li><p><strong>risk_target</strong> (<em>float</em>) – Risk target parameter.</p></li>
 <li><p><strong>max_weight</strong> (<em>np.ndarray</em>) – Array of shape (n_assets,) whose i <sup>th</sup> entry is the maximum allocation for
 asset i. Default is None (internally handled as np.ones(shape=n_assets))</p></li>
+<li><p><strong>max_iter</strong> (<em>int</em>) – Maximum number of iteration for the bisection algorithm. Default is 200.</p></li>
+<li><p><strong>rel_tol</strong> (<em>float</em>) – Relative tolerance for the risk target . Default is 0.05.</p></li>
 </ul>
 </dd>
 <dt class="field-even">Returns</dt>
@@ -399,22 +423,9 @@ to <a class="reference internal" href="#pynanz.MeanVariance.solver" title="pynan
 </dd></dl>
 
 <dl class="py method">
-<dt class="sig sig-object py" id="pynanz.MeanVariance.solve">
-<span class="sig-name descname"><span class="pre">solve</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">x</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="#pynanz.Market" title="pynanz.Market.Market"><span class="pre">pynanz.Market.Market</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">mode</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">'global'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">start_date</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><span class="pre">pandas.Timestamp</span><span class="p"><span class="pre">]</span></span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">end_date</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><span class="pre">pandas.Timestamp</span><span class="p"><span class="pre">]</span></span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">delta_date</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">1</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/pynanz/MeanVariance.html#MeanVariance.solve"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#pynanz.MeanVariance.solve" title="Permalink to this definition"></a></dt>
-<dd><dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
-<dd class="field-odd"><ul class="simple">
-<li><p><strong>x</strong> – </p></li>
-<li><p><strong>mode</strong> – </p></li>
-<li><p><strong>start_date</strong> – </p></li>
-<li><p><strong>end_date</strong> – </p></li>
-<li><p><strong>delta_date</strong> – </p></li>
-</ul>
-</dd>
-<dt class="field-even">Returns</dt>
-<dd class="field-even"><p></p>
-</dd>
-</dl>
+<dt class="sig sig-object py" id="pynanz.MeanVariance.optimize">
+<span class="sig-name descname"><span class="pre">optimize</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">start</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><span class="pre">pandas.Timestamp</span><span class="p"><span class="pre">]</span></span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">end</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><span class="pre">pandas.Timestamp</span><span class="p"><span class="pre">]</span></span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">frequency</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">n_workers</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><span class="pre">int</span><span class="p"><span class="pre">]</span></span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/pynanz/MeanVariance.html#MeanVariance.optimize"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#pynanz.MeanVariance.optimize" title="Permalink to this definition"></a></dt>
+<dd><p>Solve the Mean-Variance optimization problem from <cite>start</cite> to <cite>end</cite> at frequency <cite>frequency</cite></p>
 </dd></dl>
 
 <dl class="py method">
@@ -477,8 +488,8 @@ asset i. Default is None (internally handled as np.ones(shape=n_assets))</p></li
 
 <dl class="py function">
 <dt class="sig sig-object py" id="pynanz.indicators.future_return">
-<span class="sig-prename descclassname"><span class="pre">pynanz.indicators.</span></span><span class="sig-name descname"><span class="pre">future_return</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">x</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">pandas.Series</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">horizon</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">5</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/pynanz/indicators.html#future_return"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#pynanz.indicators.future_return" title="Permalink to this definition"></a></dt>
-<dd><p>Compute the future return over a fix time <em>horizon</em> of the pd.Series <em>x</em>. The future return <em>y</em> is defined as</p>
+<span class="sig-prename descclassname"><span class="pre">pynanz.indicators.</span></span><span class="sig-name descname"><span class="pre">future_return</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">x</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">pandas.Series</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">horizon</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">1</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/pynanz/indicators.html#future_return"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#pynanz.indicators.future_return" title="Permalink to this definition"></a></dt>
+<dd><p>Compute the future return over a fixed time <cite>horizon</cite> of the pd.Series <cite>x</cite>. The future return <em>y</em> is defined as</p>
 <div class="math notranslate nohighlight">
 \[y[t] = \frac{ x[t+horizon] - x[t]}{x[t]}\]</div>
 <p>If <cite>x</cite> has units of value, then <cite>y</cite> can be interpreted as an investment return.
@@ -486,8 +497,8 @@ In general, <cite>y</cite> measure the change over time horizon <cite>horizon</c
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>x</strong> (<em>pd.Series.</em>) – Target data to compute the future return.</p></li>
-<li><p><strong>horizon</strong> (<em>int.</em>) – Time horizon, a positive integer.</p></li>
+<li><p><strong>x</strong> (<em>pd.Series</em>) – Target data to compute the future return.</p></li>
+<li><p><strong>horizon</strong> (<em>int</em>) – Time horizon, a positive integer.</p></li>
 </ul>
 </dd>
 <dt class="field-even">Returns</dt>
@@ -513,19 +524,19 @@ bullish market while a negative histogram suggests a bearish market. Take care t
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>x</strong> (<em>pd.Series</em>) – Target data to compute the macd.</p></li>
 <li><p><strong>short_span</strong> (<em>int</em>) – Span for the fast EMA curve. Default=12.</p></li>
-<li><p><strong>long_span</strong> (<em>int</em>) – Span for the slow EMA curve. Default=26.</p></li>
+<li><p><strong>long_span</strong> (<em>in</em>) – Span for the slow EMA curve. Default=26.</p></li>
 <li><p><strong>signal_span</strong> (<em>int</em>) – Span for the signal line. Default=9.</p></li>
 </ul>
 </dd>
 <dt class="field-even">Returns</dt>
-<dd class="field-even"><p>MACD, signal_line, histogram, a 3D tuple.</p>
+<dd class="field-even"><p>A 3D tuple (MACD, signal_line, histogram)</p>
 </dd>
 </dl>
 </dd></dl>
 
 <dl class="py function">
 <dt class="sig sig-object py" id="pynanz.indicators.past_return">
-<span class="sig-prename descclassname"><span class="pre">pynanz.indicators.</span></span><span class="sig-name descname"><span class="pre">past_return</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">x</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">pandas.Series</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">horizon</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">5</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/pynanz/indicators.html#past_return"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#pynanz.indicators.past_return" title="Permalink to this definition"></a></dt>
+<span class="sig-prename descclassname"><span class="pre">pynanz.indicators.</span></span><span class="sig-name descname"><span class="pre">past_return</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">x</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">pandas.Series</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">horizon</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">1</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/pynanz/indicators.html#past_return"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#pynanz.indicators.past_return" title="Permalink to this definition"></a></dt>
 <dd><p>Compute the past return, that is the realized return, over a fix time <cite>horizon</cite> of the pd.Series <cite>x</cite>.
 The past return <cite>y</cite> is defined as</p>
 <div class="math notranslate nohighlight">
@@ -535,8 +546,8 @@ In general, <cite>y</cite> measure the change over time horizon <cite>horizon</c
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>x</strong> (<em>pd.Series.</em>) – Target data to compute the future return.</p></li>
-<li><p><strong>horizon</strong> (<em>int.</em>) – Time horizon, a positive integer.</p></li>
+<li><p><strong>x</strong> (<em>pd.Series</em>) – Target data to compute the future return.</p></li>
+<li><p><strong>horizon</strong> (<em>int</em>) – Time horizon, a positive integer.</p></li>
 </ul>
 </dd>
 <dt class="field-even">Returns</dt>
@@ -554,7 +565,8 @@ In general, <cite>y</cite> measure the change over time horizon <cite>horizon</c
 <dd><p>Compute the stochastic indicator as well as a smoothed version (ema of span period/3). The stochastic indicator
 is defined as</p>
 <div class="math notranslate nohighlight">
-\[y[t] = 100.0 \frac{x[t] - \min(x_{low}[t-period+1:])}{\max(x_{high}[t-period+1:]) - \min(x_{low}[t-period+1:])}\]</div>
+\[y[t] = 100.0 \frac{x[t] - \min(x_{low}[t-period+1:])}{\max(x_{high}[t-period+1:]) -
+ \min(x_{low}[t-period+1:])}\]</div>
 <p>If you don’t have access to a separate data for the low/high records of your data, the function uses the data
 itself to compute them. For financial data, where high/low values are reached within a trading period, this might
 not be optimal.</p>
@@ -571,15 +583,6 @@ not be optimal.</p>
 <dd class="field-even"><p>A tuple (stochastic, stochastic_smoothed).</p>
 </dd>
 </dl>
-</dd></dl>
-
-<dl class="py function">
-<dt class="sig sig-object py" id="pynanz.indicators.test_func">
-<span class="sig-prename descclassname"><span class="pre">pynanz.indicators.</span></span><span class="sig-name descname"><span class="pre">test_func</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">x</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/pynanz/indicators.html#test_func"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#pynanz.indicators.test_func" title="Permalink to this definition"></a></dt>
-<dd><p>This function will try to calculate:</p>
-<div class="math notranslate nohighlight">
-\[\sum_{i=1}^{\infty} x_{i}\]</div>
-<p>good luck!</p>
 </dd></dl>
 
 </div>
