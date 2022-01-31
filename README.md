@@ -9,6 +9,9 @@ Ongoing project.
 
 Some documentation is available at https://pynanz.readthedocs.io/en/latest/index.html
 
+Notes on mean-variance (Marowitz) analysis:
+[Notes/MeanVariance/MeanVariance.pdf](https://github.com/salemileandro/pynanz/blob/main/Notes/MeanVariance/MeanVariance.pdf).
+
 ## Functionalities
 
     * Class `pynanz.Market`
@@ -21,7 +24,6 @@ Some documentation is available at https://pynanz.readthedocs.io/en/latest/index
             - Stochastic `pynanz.Market.stochastic`
 
     * Class `pynanz.MeanVariance`
-        - [Notes/MeanVariance/MeanVariance.pdf](https://github.com/salemileandro/pynanz/blob/main/Notes/MeanVariance/MeanVariance.pdf).
         - See document Notes/MeanVariance/MeanVariance.pdf for more math info.
         - Solve the mean-variance optimization `pynanz.MeanVariance.optimize()`
 
