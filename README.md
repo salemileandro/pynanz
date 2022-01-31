@@ -21,6 +21,7 @@ Some documentation is available at https://pynanz.readthedocs.io/en/latest/index
             - Stochastic `pynanz.Market.stochastic`
 
     * Class `pynanz.MeanVariance`
+        - See document Notes/MeanVariance/MeanVariance.pdf for more math info.
         - Solve the mean-variance optimization `pynanz.MeanVariance.optimize()`
 
 
