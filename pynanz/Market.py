@@ -264,7 +264,7 @@ class Market:
 
     def save(self, filename: str):
         """
-        Save data to a pickle file (pd.DataFrame.to_pickle call). Retrieve data using :func:`pynanz.StockData.load`.
+        Save data to a pickle file (pickle.dump call). Retrieve data using :func:`pynanz.StockData.load`.
 
         :param str filename: Path to the pickle file, e.g. `"./stock_data.pkl"`
         """

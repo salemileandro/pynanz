@@ -9,7 +9,7 @@ Ongoing project.
 
 Some documentation is available at https://pynanz.readthedocs.io/en/latest/index.html
 
-Notes on mean-variance (Marowitz) analysis:
+Notes on mean-variance (Markowitz) analysis:
 [Notes/MeanVariance/MeanVariance.pdf](https://github.com/salemileandro/pynanz/blob/main/Notes/MeanVariance/MeanVariance.pdf).
 
 ## Functionalities
@@ -26,5 +26,12 @@ Notes on mean-variance (Marowitz) analysis:
     * Class `pynanz.MeanVariance`
         - See document Notes/MeanVariance/MeanVariance.pdf for more math info.
         - Solve the mean-variance optimization `pynanz.MeanVariance.optimize()`
+        - `pynanz.MeanVariance.optimize()` is parallelized !
 
+## Future perspectives
+
+    - Sector-wise PCA analysis
+    - Index retrieval
+    - sqlite local database
+    - Backtesting for strategies
 
